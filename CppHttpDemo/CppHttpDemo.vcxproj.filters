@@ -13,17 +13,86 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="support">
+      <UniqueIdentifier>{230837ce-8ad2-4533-a772-747ec34c198b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="support\tinyxml2">
+      <UniqueIdentifier>{7a7ef725-dd63-4c9b-9fd2-b7469ba11fa2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="support\cJson">
+      <UniqueIdentifier>{24d8fbe1-0c7b-44b1-bf4a-37ac5e3c560b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="support\easylogging">
+      <UniqueIdentifier>{a0131fb9-3d7b-4718-a70b-80d98076f08f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="support\mongoose">
+      <UniqueIdentifier>{c7f0e29b-e2e8-47f4-97b7-d5e1261eda8c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="http_server">
+      <UniqueIdentifier>{bf39b684-e9ac-45f3-8c54-701c0af7b85e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gb28181_server">
+      <UniqueIdentifier>{c5e058ce-90f1-4398-8874-1cde9319207c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="xmlFile">
+      <UniqueIdentifier>{2563b5fa-7fd2-42b6-8a04-a73e8cfb9a6f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="pch.h">
+    <ClInclude Include="mongoose.h">
+      <Filter>support\mongoose</Filter>
+    </ClInclude>
+    <ClInclude Include="cJSON.h">
+      <Filter>support\cJson</Filter>
+    </ClInclude>
+    <ClInclude Include="http_server.h">
+      <Filter>http_server</Filter>
+    </ClInclude>
+    <ClInclude Include="video_server.h">
+      <Filter>gb28181_server</Filter>
+    </ClInclude>
+    <ClInclude Include="tinyxml2.h">
+      <Filter>support\tinyxml2</Filter>
+    </ClInclude>
+    <ClInclude Include="xmlConfig.h">
+      <Filter>xmlFile</Filter>
+    </ClInclude>
+    <ClInclude Include="local_server.h">
+      <Filter>gb28181_server</Filter>
+    </ClInclude>
+    <ClInclude Include="camera_info.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="all.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="pch.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="CppHttpDemo.cpp">
+    <ClCompile Include="mongoose.c">
+      <Filter>support\mongoose</Filter>
+    </ClCompile>
+    <ClCompile Include="cJSON.c">
+      <Filter>support\cJson</Filter>
+    </ClCompile>
+    <ClCompile Include="http_server.cpp">
+      <Filter>http_server</Filter>
+    </ClCompile>
+    <ClCompile Include="video_server.cpp">
+      <Filter>gb28181_server</Filter>
+    </ClCompile>
+    <ClCompile Include="tinyxml2.cpp">
+      <Filter>support\tinyxml2</Filter>
+    </ClCompile>
+    <ClCompile Include="xmlConfig.cpp">
+      <Filter>xmlFile</Filter>
+    </ClCompile>
+    <ClCompile Include="local_server.cpp">
+      <Filter>gb28181_server</Filter>
+    </ClCompile>
+    <ClCompile Include="camera_info.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

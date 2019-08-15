@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.489
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CppHttpDemo", "CppHttpDemo\CppHttpDemo.vcxproj", "{A7C11E9C-20E5-4514-9AE5-13BE1B996A73}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "httpServer", "CppHttpDemo\CppHttpDemo.vcxproj", "{A7C11E9C-20E5-4514-9AE5-13BE1B996A73}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "httpclient", "httpclient\httpclient.vcxproj", "{0B36B324-93C2-40B0-9058-D8DE0AE2349D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,14 @@ Global
 		{A7C11E9C-20E5-4514-9AE5-13BE1B996A73}.Release|x64.Build.0 = Release|x64
 		{A7C11E9C-20E5-4514-9AE5-13BE1B996A73}.Release|x86.ActiveCfg = Release|Win32
 		{A7C11E9C-20E5-4514-9AE5-13BE1B996A73}.Release|x86.Build.0 = Release|Win32
+		{0B36B324-93C2-40B0-9058-D8DE0AE2349D}.Debug|x64.ActiveCfg = Debug|x64
+		{0B36B324-93C2-40B0-9058-D8DE0AE2349D}.Debug|x64.Build.0 = Debug|x64
+		{0B36B324-93C2-40B0-9058-D8DE0AE2349D}.Debug|x86.ActiveCfg = Debug|Win32
+		{0B36B324-93C2-40B0-9058-D8DE0AE2349D}.Debug|x86.Build.0 = Debug|Win32
+		{0B36B324-93C2-40B0-9058-D8DE0AE2349D}.Release|x64.ActiveCfg = Release|x64
+		{0B36B324-93C2-40B0-9058-D8DE0AE2349D}.Release|x64.Build.0 = Release|x64
+		{0B36B324-93C2-40B0-9058-D8DE0AE2349D}.Release|x86.ActiveCfg = Release|Win32
+		{0B36B324-93C2-40B0-9058-D8DE0AE2349D}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
