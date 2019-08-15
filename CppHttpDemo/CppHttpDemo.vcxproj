@@ -20,24 +20,20 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="all.h" />
-    <ClInclude Include="camera_info.h" />
     <ClInclude Include="cJSON.h" />
     <ClInclude Include="http_server.h" />
     <ClInclude Include="local_server.h" />
     <ClInclude Include="mongoose.h" />
     <ClInclude Include="tinyxml2.h" />
-    <ClInclude Include="video_server.h" />
     <ClInclude Include="xmlConfig.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="camera_info.cpp" />
     <ClCompile Include="cJSON.c" />
     <ClCompile Include="http_server.cpp" />
     <ClCompile Include="local_server.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mongoose.c" />
     <ClCompile Include="tinyxml2.cpp" />
-    <ClCompile Include="video_server.cpp" />
     <ClCompile Include="xmlConfig.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

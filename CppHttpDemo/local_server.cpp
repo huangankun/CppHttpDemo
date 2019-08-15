@@ -14,18 +14,11 @@ local_server::local_server()
 	platformServer.m_iExpires = 3600;
 	platformServer.m_bReceiveRTCP = true;
 	platformServer.m_bKeepAlive = true;
-	char body[2048];
-	snprintf(body, 2048, "v=0\r\n"
-		"o=%s 0 0 IN IP4 %s\r\n"
-		"s=Play\r\n"
-		"c=IN IP4 %s\r\n"
-		"t=0 0\r\n"
-		"m=video %d RTP/AVP 96 97 98\r\n"
-		"a=rtpmap:96 PS/90000\r\n"
-		"a=rtpmap:97 MPEG4/90000\r\n"
-		"a=rtpmap:98 H264/90000\r\n"
-		"a=recvonly\r\n", "1", "127.0.0.1", "127.0.0.1", 6666);
-	sdp = body;
+	platformServer.xmlCatalog = "";
+	platformServer.call_id = -1;
+	platformServer.dialog_id = -1;
+	platformServer.isRegister = -1;
+	platformServer.m_SN = -1;
 }
 
 
@@ -36,8 +29,6 @@ local_server::~local_server()
 void local_server::gb28181ServerThread()
 {
 	eXosipInit();
-	char *pBuf;
-	int keepAliveFlag = 0;
 
 	while (true)
 	{
@@ -49,71 +40,84 @@ void local_server::gb28181ServerThread()
 			continue;
 		}
 
-		switch (je->type) 
+		switch (je->type)
 		{
-		case EXOSIP_MESSAGE_NEW:
-		{
-			if (MSG_IS_REGISTER(je->request))
+			case EXOSIP_MESSAGE_NEW:
 			{
-				isRegister = 1;
-			}
-			else if (MSG_IS_MESSAGE(je->request))
-			{
-				osip_body_t* body = NULL;
-				osip_message_get_body(je->request, 0, &body);
-				if (body != NULL)
+				osip_contact_t *co = NULL;
+				co = (osip_contact_t *)osip_list_get(&je->request->contacts, 0);
+				if (co->url->username != platformServer.m_strID)
 				{
-					pBuf = strstr(body->body, "KeepAlive");
-					if (pBuf != NULL)
+					break;
+				}
+				if (MSG_IS_REGISTER(je->request))
+				{
+					platformServer.isRegister = 1;
+				}
+				else if (MSG_IS_MESSAGE(je->request))
+				{
+					osip_body_t* body = NULL;
+					osip_message_get_body(je->request, 0, &body);
+					if (body != NULL)
 					{
-						if (keepAliveFlag == 0)
+						std::string::size_type idx;
+						std::string bodyStr = body->body;
+
+						//保活消息
+						idx = bodyStr.find("Keepalive");
+						if (idx != std::string::npos)
 						{
-							//log
-							keepAliveFlag = 1;
-							isRegister = 1;
+							if (!platformServer.m_bKeepAlive)
+							{
+								//log
+								platformServer.m_bKeepAlive = true;
+								platformServer.isRegister = 1;
+							}
+						}
+
+						//设备消息回复
+						idx = bodyStr.find("Catalog");
+						if (idx != std::string::npos)
+						{
+							platformServer.xmlCatalog = bodyStr;
 						}
 					}
 					else
 					{
-						//log
+						//log 获取body失败
 					}
 				}
-				else
+				else if (strncmp(je->request->sip_method, "BYE", 4) != 0)
 				{
-					//log 获取body失败
+					//log 不支持sip方法
 				}
+				return200OK(je);
 			}
-			else if (strncmp(je->request->sip_method, "BYE", 4) != 0)
+		break;
+			case EXOSIP_MESSAGE_ANSWERED:
 			{
-				//log 不支持sip方法
+				//log回答方法
+				return200OK(je);
 			}
-			registerSuccess(je);
-		}
 		break;
-		case EXOSIP_MESSAGE_ANSWERED:
-		{
-			//log回答方法
-			registerSuccess(je);
-		}
+			case EXOSIP_CALL_ANSWERED:
+			{
+				osip_message_t* ack = NULL;
+				platformServer.call_id = je->cid;
+				platformServer.dialog_id = je->did;
+				//log for call_id dialog_ id
+				eXosip_call_build_ack(eCtx, je->did, &ack);
+				eXosip_lock(eCtx);
+				eXosip_call_send_ack(eCtx, je->did, ack);
+				eXosip_unlock(eCtx);
+				startToRtmp();
+			}
 		break;
-		case EXOSIP_CALL_ANSWERED:
-		{
-			osip_message_t* ack = NULL;
-			call_id = je->cid;
-			dialog_id = je->did;
-			//log for call_id dialog_ id
-			eXosip_call_build_ack(eCtx, je->did, &ack);
-			eXosip_lock(eCtx);
-			eXosip_call_send_ack(eCtx, je->did, ack);
-			eXosip_unlock(eCtx);
-			startToRtmp();
-		}
-		break;
-		default:
-		{
-			//test type je->type
-			registerSuccess(je);
-		}
+			default:
+			{
+				//test type je->type
+				return200OK(je);
+			}
 		}
 		eXosip_event_free(je);
 	}
@@ -367,7 +371,7 @@ void local_server::releaseUDPsocket(int socket_fd)
 	_close(socket_fd);
 }
 
-void local_server::registerSuccess(eXosip_event_t* je)
+void local_server::return200OK(eXosip_event_t* je)
 {
 	int iRet = 0;
 	osip_message_t* pRegister = NULL;
@@ -463,14 +467,14 @@ int local_server::sendInvite(const char* cameraId, const int rtpPort)
 int local_server::sendBye()
 {
 	eXosip_lock(eCtx);
-	eXosip_call_terminate(eCtx, call_id, dialog_id);
+	eXosip_call_terminate(eCtx, platformServer.call_id, platformServer.dialog_id);
 	eXosip_unlock(eCtx);
 	return 0;
 }
 
 int local_server::sendQueryCatalog()
 {
-	std::string bufQuery = xmlConfig::buildQueryCmdXml(platformServer.m_strID.c_str(), m_SN);
+	std::string bufQuery = xmlConfig::buildQueryCmdXml(platformServer.m_strID.c_str(), platformServer.m_SN);
 
 	int iRet = 0;
 	char destCall[256], srcCall[256];
@@ -485,7 +489,7 @@ int local_server::sendQueryCatalog()
 		eXosip_lock(eCtx);
 		eXosip_message_send_request(eCtx, queryCatalog);
 		eXosip_unlock(eCtx);
-		m_SN++;
+		platformServer.m_SN++;
 		//log 发送设备查询信令成功
 	}
 	else

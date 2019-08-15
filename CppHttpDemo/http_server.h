@@ -1,7 +1,6 @@
 #pragma once
 #include "mongoose.h"
 #include "cJSON.h"
-#include "local_server.h"
 #include "all.h"
 
 // 定义http返回callback
@@ -24,7 +23,6 @@ public:
 	static std::unordered_map<std::string, ReqHandler> s_handler_map; // 回调函数映射表
 	std::string m_port;    // 端口
 	std::string m_ip;		//地址
-	std::string m_strWorkDir;
 private:
 	// 静态事件响应函数
 	static void OnHttpWebsocketEvent(mg_connection *connection, int event_type, void *event_data);

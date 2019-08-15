@@ -1,18 +1,15 @@
 
 #include "http_server.h"
 #include "xmlConfig.h"
-local_server testServer;
+
 void HttpServer::Init(const std::string &port)
 {
 	m_port = port;
 	s_server_option.enable_directory_listing = "yes";
 	s_server_option.document_root = s_web_dir.c_str();
 
-	m_strWorkDir = xmlConfig::getWorkDir();
-	m_strWorkDir += "\\config.xml";
+
 	// 其他http设置
-	xmlConfig::readLocalServerNode(m_strWorkDir.c_str(), testServer);
-	testServer.start();
 	// 开启 CORS，本项只针对主页加载有效
 	// s_server_option.extra_headers = "Access-Control-Allow-Origin: *";
 }
@@ -113,26 +110,17 @@ void HttpServer::HandleHttpEvent(mg_connection *connection, http_message *http_r
 	{
 		ReqHandler handle_func = it->second;
 		handle_func(url, body, connection, &HttpServer::SendHttpRsp);
+		return;
 	}
 
 	// 其他请求
 	if (route_check(http_req, "/")) // index page
 		mg_serve_http(connection, http_req, s_server_option);
-	else if (route_check(http_req, "/realvideo")) 
+	else if (route_check(http_req, "/api/return")) 
 	{
 		// 直接回传
-		cJSON *monitor = cJSON_CreateObject();
-		cJSON *code = cJSON_CreateNumber(1);
-		cJSON *message = cJSON_CreateString("succeed");
-		cJSON *dataUrl = cJSON_CreateObject();
-		cJSON *url = cJSON_CreateString("rtmp://ip:port/live/1111111");
-		cJSON_AddItemToObject(dataUrl, "url", url);
-		cJSON_AddItemToObject(monitor, "code", code);
-		cJSON_AddItemToObject(monitor, "message", message);
-		cJSON_AddItemToObject(monitor, "data", dataUrl);
-		char *strTmp = cJSON_Print(monitor);
-		testServer.sendInvite("34032301051315041603", 6666);
-		SendHttpRsp(connection, strTmp);
+
+		SendHttpRsp(connection, body);
 	}
 	else if (route_check(http_req, "/api/sum"))
 	{

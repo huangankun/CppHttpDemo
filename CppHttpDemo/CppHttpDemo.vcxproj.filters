@@ -48,9 +48,6 @@
     <ClInclude Include="http_server.h">
       <Filter>http_server</Filter>
     </ClInclude>
-    <ClInclude Include="video_server.h">
-      <Filter>gb28181_server</Filter>
-    </ClInclude>
     <ClInclude Include="tinyxml2.h">
       <Filter>support\tinyxml2</Filter>
     </ClInclude>
@@ -59,9 +56,6 @@
     </ClInclude>
     <ClInclude Include="local_server.h">
       <Filter>gb28181_server</Filter>
-    </ClInclude>
-    <ClInclude Include="camera_info.h">
-      <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="all.h">
       <Filter>头文件</Filter>
@@ -80,9 +74,6 @@
     <ClCompile Include="http_server.cpp">
       <Filter>http_server</Filter>
     </ClCompile>
-    <ClCompile Include="video_server.cpp">
-      <Filter>gb28181_server</Filter>
-    </ClCompile>
     <ClCompile Include="tinyxml2.cpp">
       <Filter>support\tinyxml2</Filter>
     </ClCompile>
@@ -91,9 +82,6 @@
     </ClCompile>
     <ClCompile Include="local_server.cpp">
       <Filter>gb28181_server</Filter>
-    </ClCompile>
-    <ClCompile Include="camera_info.cpp">
-      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
