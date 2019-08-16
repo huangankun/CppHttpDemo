@@ -10,9 +10,13 @@ xmlConfig::~xmlConfig()
 {
 }
 
-//function:	获取程序工作路径
-//param:	空
-//return：路径
+//************************************
+// Method:    getWorkDir 获取程序工作路径
+// FullName:  xmlConfig::getWorkDir
+// Access:    public static 
+// Returns:   const char*
+// Qualifier:
+//************************************
 const char* xmlConfig::getWorkDir()
 {
 	char *buffer;
@@ -29,9 +33,15 @@ const char* xmlConfig::getWorkDir()
 	}
 }
 
-//function:	创建xml文件
-//param:	xmlPath:文件路径含文件名
-//return：成功返回0，失败返回错误码
+
+//************************************
+// Method:    createXML 创建xml文件
+// FullName:  xmlConfig::createXML
+// Access:    public static 
+// Returns:   int 成功返回0，失败返回错误码
+// Qualifier:
+// Parameter: const char * xmlPath 文件路径含文件名
+//************************************
 int xmlConfig::createXML(const char* xmlPath) 
 {
 	const char* declaration = "<?xml version=\"1.0\" encoding=\"gb2312\"?>";
@@ -57,9 +67,16 @@ int xmlConfig::createXML(const char* xmlPath)
 	return doc.SaveFile(xmlPath);
 }
 
-//function:	插入视频服务器结点
-//param:	xmlPath:文件路径含文件名；video_server：视频服务器信息
-//return：成功返回0，失败返回错误码
+
+//************************************
+// Method:    insertVideoServerNode 插入视频服务器结点
+// FullName:  xmlConfig::insertVideoServerNode
+// Access:    public static 
+// Returns:   int
+// Qualifier:
+// Parameter: const char * xmlPath 文件路径含文件名
+// Parameter: const local_server & local_server 视频服务器信息
+//************************************
 int xmlConfig::insertVideoServerNode(const char* xmlPath, const local_server& local_server)
 {
 	tinyxml2::XMLDocument doc;
@@ -130,9 +147,16 @@ int xmlConfig::insertVideoServerNode(const char* xmlPath, const local_server& lo
 	return doc.SaveFile(xmlPath);
 }
 
-//function:	插入本地服务器结点
-//param:	xmlPath:文件路径含文件名；http_server：本地服务器信息
-//return：成功返回0，失败返回错误码
+
+//************************************
+// Method:    insertHttpServerNode 插入本地服务器结点
+// FullName:  xmlConfig::insertHttpServerNode
+// Access:    public static 
+// Returns:   int
+// Qualifier:
+// Parameter: const char * xmlPath 文件路径含文件名
+// Parameter: const local_server & local_server 视频服务器信息
+//************************************
 int xmlConfig::insertHttpServerNode(const char* xmlPath, const local_server& local_server)
 {
 	tinyxml2::XMLDocument doc;
@@ -190,9 +214,16 @@ int xmlConfig::insertHttpServerNode(const char* xmlPath, const local_server& loc
 	return doc.SaveFile(xmlPath);
 }
 
-//function:根据用户名获取用户节点
-//param:root:xml文件根节点；userName：用户名
-//return：用户节点
+
+//************************************
+// Method:    queryVideoServerNodeByName 根据用户名获取用户节点
+// FullName:  xmlConfig::queryVideoServerNodeByName
+// Access:    public static 
+// Returns:   tinyxml2::XMLElement*
+// Qualifier:
+// Parameter: XMLElement * root 文件根节点
+// Parameter: const std::string & serverID 用户名
+//************************************
 XMLElement* xmlConfig::queryVideoServerNodeByName(XMLElement* root, const std::string& serverID)
 {
 
@@ -206,9 +237,16 @@ XMLElement* xmlConfig::queryVideoServerNodeByName(XMLElement* root, const std::s
 	return userNode;
 }
 
-//function:	读取本地服务结点信息
-//param:	xmlPath:文件路径含文件名；http_server：本地服务结点实例
-//return：空
+
+//************************************
+// Method:    readLocalServerNode 读取本地服务结点信息
+// FullName:  xmlConfig::readLocalServerNode
+// Access:    
+// Returns:   void
+// Qualifier:
+// Parameter: const char * xmlPath 文件路径含文件名
+// Parameter: local_server & local_server 视频服务器信息
+//************************************
 void xmlConfig::readLocalServerNode(const char* xmlPath, local_server &local_server)
 {
 	tinyxml2::XMLDocument doc;
@@ -239,7 +277,15 @@ void xmlConfig::readLocalServerNode(const char* xmlPath, local_server &local_ser
 	local_server.m_bAuthentication = atoi(authNode->GetText());
 }
 
-
+//************************************
+// Method:    buildQueryCmdXml 构建设备目录查询XML
+// FullName:  xmlConfig::buildQueryCmdXml
+// Access:    public static 
+// Returns:   std::string
+// Qualifier:
+// Parameter: const char * platformID 下级域平台ID
+// Parameter: int sn 命令序列号
+//************************************
 std::string xmlConfig::buildQueryCmdXml(const char* platformID, int sn)
 {
 	const char* declaration = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
@@ -264,6 +310,74 @@ std::string xmlConfig::buildQueryCmdXml(const char* platformID, int sn)
 	XMLText* idText = doc.NewText(platformID);
 	deviceID->InsertEndChild(idText);
 	rootNode->InsertEndChild(deviceID);
+
+	XMLPrinter strXml;
+	doc.Print(&strXml);
+	return strXml.CStr();
+}
+
+
+//************************************
+// Method:    buildControlXml 构建控制命令XML
+// FullName:  xmlConfig::buildControlXml
+// Access:    public static 
+// Returns:   std::string
+// Qualifier:
+// Parameter: const char * deviceID 摄像机ID
+// Parameter: int sn 命令序列号
+//************************************
+std::string xmlConfig::buildControlXml(const char* deviceID, int sn)
+{
+	const char* declaration = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+	tinyxml2::XMLDocument doc;
+	doc.Parse(declaration);
+	XMLElement* rootNode = doc.NewElement("Control");
+	doc.InsertEndChild(rootNode);
+
+	XMLElement* cmdNode = doc.NewElement("CmdType");
+	XMLText* cmdType = doc.NewText("DeviceControl");
+	cmdNode->InsertEndChild(cmdType);
+	rootNode->InsertEndChild(cmdNode);
+
+	XMLElement* snNode = doc.NewElement("SN");
+	char intBuf[10];
+	_itoa(sn, intBuf, 10);
+	XMLText* snText = doc.NewText(intBuf);
+	snNode->InsertEndChild(snText);
+	rootNode->InsertEndChild(snNode);
+
+	XMLElement* deviceIDNode = doc.NewElement("DeviceID");
+	XMLText* idText = doc.NewText(deviceID);
+	deviceIDNode->InsertEndChild(idText);
+	rootNode->InsertEndChild(deviceIDNode);
+
+	XMLPrinter strXml;
+	doc.Print(&strXml);
+	return strXml.CStr();
+}
+
+//************************************
+// Method:    builPTZControlXml 构建云台控制XML
+// FullName:  xmlConfig::builPTZControlXml
+// Access:    public static 
+// Returns:   std::string
+// Qualifier:
+// Parameter: const char * deviceID ID
+// Parameter: int sn 命令序列号
+// Parameter: const char * ptzCode 云台控制命令码
+//************************************
+std::string xmlConfig::builPTZControlXml(const char* deviceID, int sn, const char* ptzCode)
+{
+	std::string strControlXml = buildControlXml(deviceID, sn);
+	tinyxml2::XMLDocument doc;
+	XMLError bRet;
+	bRet = doc.Parse(strControlXml.c_str());
+	XMLElement* rootNode = doc.RootElement();
+
+	XMLElement* PtzNode = doc.NewElement("PTZCmd");
+	XMLText* ptzText = doc.NewText(ptzCode);
+	PtzNode->InsertEndChild(ptzText);
+	rootNode->InsertEndChild(PtzNode);
 
 	XMLPrinter strXml;
 	doc.Print(&strXml);

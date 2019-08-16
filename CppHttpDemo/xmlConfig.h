@@ -30,4 +30,8 @@ public:
 	static void readLocalServerNode(const char* xmlPath, local_server& local_server);
 
 	static std::string buildQueryCmdXml(const char* platformID, int sn);
+
+	static std::string builPTZControlXml(const char* deviceID, int sn, const char* ptzCode);
+
+	static std::string buildControlXml(const char* deviceID, int sn);
 };

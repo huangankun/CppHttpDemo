@@ -14,19 +14,19 @@ bool handle_fun1(std::string url, std::string body, mg_connection *c, OnRspCallb
 {
 	// do sth 解析json请求，判断现有的目录中是否有对应的相机然后发送invite并启动rtmp线程，返回相应http请求。
 
-	cJSON* bodyJson = cJSON_Parse(body.c_str());
+	/*cJSON* bodyJson = cJSON_Parse(body.c_str());
 	cJSON* paramJson = cJSON_GetObjectItemCaseSensitive(bodyJson, "userparam");
 	cJSON* usernameJson = cJSON_GetObjectItemCaseSensitive(paramJson, "username");
 	cJSON* deviceIDJson = cJSON_GetObjectItemCaseSensitive(paramJson, "deviceid");
 	std::string deviceid = deviceIDJson->valuestring;
 	std::string username = usernameJson->valuestring;
 	if (username == testServer.platformServer.m_strID)
-	{
-		if (testServer.platformServer.xmlCatalog.find(deviceid) != std::string::npos)
-		{
-			testServer.sendInvite(deviceid.c_str(), 6000);
-		}
-	}
+	{*/
+		//if (testServer.platformServer.xmlCatalog.find(deviceid) != std::string::npos)
+		//{
+			testServer.sendInvite("35080224001310330351", 6000);
+		//}
+	//}
 
 	//testServer.sendInvite("34032301051315041603", 6666);
 	cJSON *monitor = cJSON_CreateObject();

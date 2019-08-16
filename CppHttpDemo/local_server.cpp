@@ -3,12 +3,12 @@
 
 local_server::local_server()
 {
-	url = "rtmp://127.0.0.1:19350/live";
-	platformServer.m_strRealm = "34000000";
+	url = "rtmp://127.0.0.1:1935/live";
+	platformServer.m_strRealm = "35080000";
 	platformServer.m_strPassword = "123456";
-	platformServer.m_strIP = "127.0.0.1";
-	platformServer.m_strID = "34032301051315041603";
-	platformServer.m_iPort = 16001;
+	platformServer.m_strIP = "112.111.229.121";
+	platformServer.m_strID = "35080000002000000128";
+	platformServer.m_iPort = 7100;
 	platformServer.m_iKeepAliveInterval = 30000;
 	platformServer.m_iHeartBeat = 30;
 	platformServer.m_iExpires = 3600;
@@ -18,7 +18,14 @@ local_server::local_server()
 	platformServer.call_id = -1;
 	platformServer.dialog_id = -1;
 	platformServer.isRegister = -1;
-	platformServer.m_SN = -1;
+	platformServer.m_SN = 1;
+
+	m_ip = "27.17.34.22";
+	m_port = 5060;
+	m_realm = "34020000";
+	m_strID = "34020000002000000001";
+
+
 }
 
 
@@ -175,7 +182,7 @@ int local_server::openInputSdp(const char* sdp)
 	AVInputFormat* ifmt = av_find_input_format("sdp");
 
 	int ret = 0;
-	ret = av_dict_set(&dicts, "protocol_whitelist", "file,udp,rtp", 0);
+	//ret = av_dict_set(&dicts, "protocol_whitelist", "file,udp,rtp", 0);
 	if (ret < 0)
 	{
 		char errStr[256];
@@ -185,9 +192,9 @@ int local_server::openInputSdp(const char* sdp)
 	}
 	unsigned char* strSdp = (unsigned char*)(this->sdp.c_str());
 
-	AVIOContext* avio = avio_alloc_context(strSdp, this->sdp.length(), 0, (void *)NULL, NULL, NULL, NULL);
-	context->pb = avio;
-	ret = avformat_open_input(&context, "nothing", ifmt, &dicts);
+	//AVIOContext* avio = avio_alloc_context(strSdp, this->sdp.length(), 0, (void *)NULL, NULL, NULL, NULL);
+	//context->pb = avio;
+	ret = avformat_open_input(&context, "F:\\egova\\安徽国标\\SKGB28181Server-5060\\video\\video-6000.ps", NULL, NULL);
 	if (ret < 0)
 	{
 		char errStr[256];
@@ -251,7 +258,7 @@ int local_server::openOutput(const char* url)
 			return ret;
 		}
 	}
-
+	
 	ret = avformat_write_header(outputContext, nullptr);
 	if (ret < 0)
 	{
@@ -323,7 +330,7 @@ int local_server::initUDPsocket(int port, struct sockaddr_in *serverAddr, char* 
 void local_server::rtcpThread()
 {
 	int socket_fd;
-	int rtcp_port = 1935 + 1;
+	int rtcp_port = 6000 + 1;
 	struct  sockaddr_in serverAddr;
 	
 	socket_fd = initUDPsocket(rtcp_port, &serverAddr, NULL);
@@ -356,6 +363,7 @@ void local_server::rtcpThread()
 		else
 		{
 			//接收失败
+			
 		}
 	}
 	releaseUDPsocket(socket_fd);
@@ -413,6 +421,8 @@ int local_server::eXosipInit()
 	{
 		return iRet;
 	}
+
+	sendInvite("35080224001310147945", 6000);
 }
 
 int local_server::eXosipFree()
@@ -461,6 +471,19 @@ int local_server::sendInvite(const char* cameraId, const int rtpPort)
 	eXosip_lock(eCtx);
 	iRet = eXosip_call_send_initial_invite(eCtx, invite);
 	eXosip_unlock(eCtx);
+	bodyLen = snprintf(body, 2048,
+		"v=0\r\n"
+		"o=%s 0 0 IN IP4 %s\r\n"
+		"s=Play\r\n"
+		"c=IN IP4 %s\r\n"
+		"t=0 0\r\n"
+		"m=video %d RTP/AVP 96 97 98\r\n"
+		"a=rtpmap:96 PS/90000\r\n"
+		"a=rtpmap:97 MPEG4/90000\r\n"
+		"a=rtpmap:98 H264/90000\r\n"
+		"a=recvonly\r\n", cameraId, "127.0.0.1",
+		"127.0.0.1", rtpPort);
+	sdp = body;
 	return iRet;
 }
 
@@ -502,14 +525,12 @@ int local_server::sendQueryCatalog()
 void local_server::start()
 {
 	localThreads[0] = std::thread(&local_server::gb28181ServerThread, this);
-	localThreads[0].detach();
+	//localThreads[0].detach();
 }
 
 void local_server::startToRtmp()
 {
 	localThreads[1] = std::thread(&local_server::gb28181ToRtmpThread, this);
 	localThreads[2] = std::thread(&local_server::rtcpThread, this);
-	localThreads[1].join();
-	localThreads[2].join();
 }
 
