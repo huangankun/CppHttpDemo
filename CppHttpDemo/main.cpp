@@ -2,8 +2,11 @@
 #include "all.h"
 #include "http_server.h"
 #include "local_server.h"
+INITIALIZE_EASYLOGGINGPP
 
 // 初始化HttpServer静态类成员
+std::string xmlConfig::strWorkPath = xmlConfig::getWorkDir();
+std::string xmlConfig::configPath = xmlConfig::strWorkPath + "\\config.xml";
 mg_serve_http_opts HttpServer::s_server_option;
 std::string HttpServer::s_web_dir = "./web";
 std::unordered_map<std::string, ReqHandler> HttpServer::s_handler_map;
@@ -24,7 +27,7 @@ bool handle_fun1(std::string url, std::string body, mg_connection *c, OnRspCallb
 	{*/
 		//if (testServer.platformServer.xmlCatalog.find(deviceid) != std::string::npos)
 		//{
-			testServer.sendInvite("35080224001310330351", 6000);
+			//testServer.sendInvite("34000000001317006215", 6000);
 		//}
 	//}
 
@@ -33,7 +36,7 @@ bool handle_fun1(std::string url, std::string body, mg_connection *c, OnRspCallb
 	cJSON *code = cJSON_CreateNumber(1);
 	cJSON *message = cJSON_CreateString("succeed");
 	cJSON *dataUrl = cJSON_CreateObject();
-	cJSON *urlJson = cJSON_CreateString("rtmp://ip:port/live/1111111");
+	cJSON *urlJson = cJSON_CreateString("rtmp://127.0.0.1:1935/live");
 	cJSON_AddItemToObject(dataUrl, "url", urlJson);
 	cJSON_AddItemToObject(monitor, "code", code);
 	cJSON_AddItemToObject(monitor, "message", message);
@@ -59,17 +62,17 @@ bool handle_fun2(std::string url, std::string body, mg_connection *c, OnRspCallb
 
 int main(int argc, char *argv[])
 {
-	std::string strWorkPath = xmlConfig::getWorkDir();
-	std::string configPath = strWorkPath + "\\config.xml";
-	std::string port = "7999";
+	xmlConfig::logGetConf();
+	LOG(INFO) << "***** 程序启动 *****";
+	LOG(INFO) << "程序配置文件目录：" << xmlConfig::configPath;
+
 	auto http_server = std::shared_ptr<HttpServer>(new HttpServer);
-	local_server testServer;
-	http_server->Init(port);
-	xmlConfig::readLocalServerNode(configPath.c_str(), testServer);
+	http_server->Init();
 	testServer.start();
+
 	// add handler
 	http_server->AddHandler("/realvideo", handle_fun1);
 	http_server->AddHandler("/api/fun2", handle_fun2);
 	http_server->Start();
-	return 0;
+	LOG(INFO) << "***** 程序结束 *****";
 }

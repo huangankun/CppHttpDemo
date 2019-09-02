@@ -2,9 +2,9 @@
 #include "http_server.h"
 #include "xmlConfig.h"
 
-void HttpServer::Init(const std::string &port)
+void HttpServer::Init()
 {
-	m_port = port;
+	xmlConfig::readHttpServerNode(*this);
 	s_server_option.enable_directory_listing = "yes";
 	s_server_option.document_root = s_web_dir.c_str();
 
@@ -16,14 +16,20 @@ void HttpServer::Init(const std::string &port)
 
 bool HttpServer::Start()
 {
+	LOG(INFO) << "HttpServer::Start 线程开始运行";
+
 	mg_mgr_init(&m_mgr, NULL);
 	mg_connection *connection = mg_bind(&m_mgr, m_port.c_str(), HttpServer::OnHttpWebsocketEvent);
 	if (connection == NULL)
+	{
+		LOG(INFO) << "HttpServer::Start 绑定端失败，端口号：" << m_port;
 		return false;
+	}
 	// for both http and websocket
 	mg_set_protocol_http_websocket(connection);
 
-	printf("starting http server at port: %s\n", m_port.c_str());
+	LOG(INFO) << "HttpServer::Start 开始监听HTTP请求，端口号：" << m_port;
+
 	// loop
 	while (true)
 		mg_mgr_poll(&m_mgr, 500); // ms
@@ -100,7 +106,8 @@ void HttpServer::SendHttpRsp(mg_connection *connection, std::string rsp)
 void HttpServer::HandleHttpEvent(mg_connection *connection, http_message *http_req)
 {
 	std::string req_str = std::string(http_req->message.p, http_req->message.len);
-	printf("got request: %s\n", req_str.c_str());
+
+	LOG(INFO) << "HttpServer::HandleHttpEvent 获取到HTTP请求：" << req_str;
 
 	// 先过滤是否已注册的函数回调
 	std::string url = std::string(http_req->uri.p, http_req->uri.len);
@@ -114,36 +121,36 @@ void HttpServer::HandleHttpEvent(mg_connection *connection, http_message *http_r
 	}
 
 	// 其他请求
-	if (route_check(http_req, "/")) // index page
-		mg_serve_http(connection, http_req, s_server_option);
-	else if (route_check(http_req, "/api/return")) 
-	{
-		// 直接回传
+	//if (route_check(http_req, "/")) // index page
+	//	mg_serve_http(connection, http_req, s_server_option);
+	//else if (route_check(http_req, "/api/return")) 
+	//{
+	//	// 直接回传
 
-		SendHttpRsp(connection, body);
-	}
-	else if (route_check(http_req, "/api/sum"))
-	{
-		// 简单post请求，加法运算测试
-		char n1[100], n2[100];
-		double result;
+	//	SendHttpRsp(connection, body);
+	//}
+	//else if (route_check(http_req, "/api/sum"))
+	//{
+	//	// 简单post请求，加法运算测试
+	//	char n1[100], n2[100];
+	//	double result;
 
-		/* Get form variables */
-		mg_get_http_var(&http_req->body, "n1", n1, sizeof(n1));
-		mg_get_http_var(&http_req->body, "n2", n2, sizeof(n2));
+	//	/* Get form variables */
+	//	mg_get_http_var(&http_req->body, "n1", n1, sizeof(n1));
+	//	mg_get_http_var(&http_req->body, "n2", n2, sizeof(n2));
 
-		/* Compute the result and send it back as a JSON object */
-		result = strtod(n1, NULL) + strtod(n2, NULL);
-		SendHttpRsp(connection, std::to_string(result));
-	}
-	else
-	{
-		mg_printf(
-			connection,
-			"%s",
-			"HTTP/1.1 501 Not Implemented\r\n" 
-			"Content-Length: 0\r\n\r\n");
-	}
+	//	/* Compute the result and send it back as a JSON object */
+	//	result = strtod(n1, NULL) + strtod(n2, NULL);
+	//	SendHttpRsp(connection, std::to_string(result));
+	//}
+	//else
+	//{
+	//	mg_printf(
+	//		connection,
+	//		"%s",
+	//		"HTTP/1.1 501 Not Implemented\r\n" 
+	//		"Content-Length: 0\r\n\r\n");
+	//}
 }
 
 // ---- websocket ---- //
@@ -157,15 +164,21 @@ void HttpServer::HandleWebsocketMessage(mg_connection *connection, int event_typ
 	if (event_type == MG_EV_WEBSOCKET_HANDSHAKE_DONE)
 	{
 		printf("client websocket connected\n");
+
+		LOG(INFO) << "HttpServer::HandleWebsocketMessage WebSocket握手成功：";
+
 		// 获取连接客户端的IP和端口
 		char addr[32];
 		mg_sock_addr_to_str(&connection->sa, addr, sizeof(addr), MG_SOCK_STRINGIFY_IP | MG_SOCK_STRINGIFY_PORT);
-		printf("client addr: %s\n", addr);
+
+		LOG(INFO) << "HttpServer::HandleWebsocketMessage WebSocket地址："<<addr;
 
 		// 添加 session
 		s_websocket_session_set.insert(connection);
 
 		SendWebsocketMsg(connection, "client websocket connected");
+
+		LOG(INFO) << "HttpServer::HandleWebsocketMessage SendWebsocketMsg";
 	}
 	else if (event_type == MG_EV_WEBSOCKET_FRAME)
 	{
@@ -177,7 +190,8 @@ void HttpServer::HandleWebsocketMessage(mg_connection *connection, int event_typ
 		strncpy(buff, received_msg.p, received_msg.len); // must use strncpy, specifiy memory pointer and length
 
 		// do sth to process request
-		printf("received msg: %s\n", buff);
+		LOG(INFO) << "HttpServer::HandleWebsocketMessage 收到信息：" << buff;
+
 		SendWebsocketMsg(connection, "send your msg back: " + std::string(buff));
 		//BroadcastWebsocketMsg("broadcast msg: " + std::string(buff));
 	}
@@ -185,7 +199,7 @@ void HttpServer::HandleWebsocketMessage(mg_connection *connection, int event_typ
 	{
 		if (isWebsocket(connection))
 		{
-			printf("client websocket closed\n");
+			LOG(INFO) << "HttpServer::HandleWebsocketMessage 关闭WebSocket：";
 			// 移除session
 			if (s_websocket_session_set.find(connection) != s_websocket_session_set.end())
 				s_websocket_session_set.erase(connection);

@@ -1,6 +1,15 @@
 #pragma once
 #include "xmlConfig.h"
 #include "all.h"
+#include "rtp_socket.h"
+#include "ffmpeg_to_web.h"
+
+#define SUB_UP 0
+#define SUB_DOWN 1
+#define SUB_LEFT 2
+#define SUB_RIGHT 3
+#define SUB_ZOOMIN 4
+#define SUB_ZOOMOUT 5
 
 struct camera_info
 {
@@ -9,6 +18,8 @@ struct camera_info
 	int status;
 	int statusErrCnt;
 	int running;
+	rtp_socket *m_rtpSocket;
+	ffmpeg_to_web *m_ffmpeg;
 };
 
 struct video_server
@@ -17,19 +28,19 @@ struct video_server
 	std::string m_strID;	//ID
 	std::string m_strIP;	//IP
 	std::string m_strPassword;	//密码
+	std::string xmlCatalog;		//目录缓存
 
 	int m_iPort;	//端口
 	int m_iExpires;	//注册时间
 	int m_iHeartBeat;	//心跳周期
 	int m_iKeepAliveInterval;	//保活间隔
 
-	bool m_bKeepAlive;	//保活
+	bool m_bKeepAlive;			//保活
 	bool m_bReceiveRTCP;	//接收RTCP
-	std::string xmlCatalog;
-	int call_id;
-	int dialog_id;
-	int isRegister;
-	int m_SN;
+	int call_id;	//连接ID
+	int dialog_id;	//会话ID
+	int isRegister;	//判断是否是注册请求
+	int m_SN;		//信令计数器，没法送一次控制类型信令自增1
 };
 
 class local_server
@@ -38,45 +49,34 @@ public:
 	local_server();
 	~local_server();
 
-	AVFormatContext* outputContext;
-	AVFormatContext* context;
+	bool m_bIsStop;          //是否收到停止命令
+	bool m_bIsThreadRunning; //现在是否在运行
 
-
-	camera_info camera;
-	video_server platformServer;
+	std::list<camera_info> m_cameraList;	//正在播放的相机列表
+	std::list<video_server> m_platformList;		//下级域服务器列表
 	struct eXosip_t *eCtx;
 
-
+	int m_videoNum;	//视频路数
 	int m_port;    // 端口
 	std::string m_ip;		//地址
 	std::string m_protocol;	//协议：TCP和UDP
 	std::string m_strID;			//服务器ID
 	std::string m_realm;		//域
-	std::string m_password;	//密码
-	std::string url;					
-	std::string sdp;
+	std::string m_password;	//密码			
 	bool m_bAuthentication;	//鉴权
-	std::thread localThreads[3];
+
 
 	void start();
 	void stop();
-	void startToRtmp();
-	void stopToRtmp();
-	int initUDPsocket(int port, struct sockaddr_in *serverAddr, char* mcastAddr);
-	void releaseUDPsocket(int socket_fd);
 	void gb28181ServerThread();
-	void rtcpThread();
-	void gb28181ToRtmpThread();
-	void ffmpegInit();
-	int openInputSdp(const char* sdp);
-	int openOutput(const char* url);
-	std::shared_ptr<AVPacket> readPacketFromSource();
-	int writePacket(std::shared_ptr<AVPacket> packet);
 	void return200OK(eXosip_event_t* je);
 	int eXosipInit();
 	int eXosipFree();
-	int sendInvite(const char* cameraId, const int rtpPort);
-	int sendBye();
-	int sendQueryCatalog();
+	int sendInvite(const char* cameraId, const char* platformIP, int platformPort, int cameraPort);
+	int sendBye(int callId, int dialogId);
+	int sendQueryCatalog(const char* platformID, int sn, const char* platformIP, int platformPort);
+	int sendPTZCMD(const char* deviceID, const int sn, const char* ptzCode, const char* platformID, const char* platformIP, int platformPort);
+	int sendPlayBack(const char* cameraId, const char* platformIP, int platformPort, int cameraPort, std::string startTime, std::string endTime);
+	std::string getPTZCode(const int m_iSubCMD);
 };
 

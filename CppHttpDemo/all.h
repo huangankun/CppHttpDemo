@@ -15,9 +15,7 @@
 #include <direct.h>
 #include <chrono>
 #include <fstream>
-extern "C"
-{
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libavfilter/avfilter.h>
-}
+#include "blockingconcurrentqueue.h"
+#include "concurrentqueue.h"
+#include <iosfwd>
+#include "easylogging++.h"

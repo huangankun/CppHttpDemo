@@ -37,6 +37,15 @@
     <Filter Include="xmlFile">
       <UniqueIdentifier>{2563b5fa-7fd2-42b6-8a04-a73e8cfb9a6f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="packet_queue">
+      <UniqueIdentifier>{ee5c37d0-0848-405f-8b27-1c2fb2b4b84f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ffmpeg">
+      <UniqueIdentifier>{af5ef3a0-944a-4110-9118-041c68ab7abe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rtp_socket">
+      <UniqueIdentifier>{25957252-d944-477a-bafb-f27b9860c619}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mongoose.h">
@@ -60,6 +69,21 @@
     <ClInclude Include="all.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="blockingconcurrentqueue.h">
+      <Filter>packet_queue</Filter>
+    </ClInclude>
+    <ClInclude Include="concurrentqueue.h">
+      <Filter>packet_queue</Filter>
+    </ClInclude>
+    <ClInclude Include="ffmpeg_to_web.h">
+      <Filter>ffmpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="rtp_socket.h">
+      <Filter>rtp_socket</Filter>
+    </ClInclude>
+    <ClInclude Include="easylogging++.h">
+      <Filter>support\easylogging</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -82,6 +106,15 @@
     </ClCompile>
     <ClCompile Include="local_server.cpp">
       <Filter>gb28181_server</Filter>
+    </ClCompile>
+    <ClCompile Include="ffmpeg_to_web.cpp">
+      <Filter>ffmpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="rtp_socket.cpp">
+      <Filter>rtp_socket</Filter>
+    </ClCompile>
+    <ClCompile Include="easylogging++.cc">
+      <Filter>support\easylogging</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
