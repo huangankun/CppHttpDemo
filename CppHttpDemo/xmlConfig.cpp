@@ -2,6 +2,7 @@
 
 local_server *xmlConfig::gb28181Server = nullptr;
 
+
 xmlConfig::xmlConfig()
 {
 }
@@ -20,6 +21,7 @@ xmlConfig::~xmlConfig()
 //************************************
 const char* xmlConfig::getWorkDir()
 {
+	xmlConfig::logGetConf();
 	char *buffer;
 	//也可以将buffer作为输出参数
 	if ((buffer = _getcwd(NULL, 0)) == NULL)

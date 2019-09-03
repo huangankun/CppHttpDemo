@@ -4,6 +4,7 @@
 local_server::local_server()
 {
 	xmlConfig::gb28181Server = this;
+	xmlConfig::readLocalServerNode(*this);
 	xmlConfig::readVideoServerNodes(*this);
 }
 

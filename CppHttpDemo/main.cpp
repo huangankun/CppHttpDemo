@@ -62,7 +62,6 @@ bool handle_fun2(std::string url, std::string body, mg_connection *c, OnRspCallb
 
 int main(int argc, char *argv[])
 {
-	xmlConfig::logGetConf();
 	LOG(INFO) << "***** 程序启动 *****";
 	LOG(INFO) << "程序配置文件目录：" << xmlConfig::configPath;
 
