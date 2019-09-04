@@ -5,6 +5,7 @@
 ffmpeg_to_web::ffmpeg_to_web()
 {
 	m_bIsRunning = true;
+	m_bSaveJPEG = false;
 }
 
 
@@ -92,7 +93,7 @@ int ffmpeg_to_web::openOutputStream()
 	LOG(INFO) << " ffmpeg_to_web::openOutputStream 打开输出流，分配初始化";
 
 	int ret = 0;
-	ret = avformat_alloc_output_context2(&outputContext, nullptr, "flv", m_strUrl.c_str());
+	ret = avformat_alloc_output_context2(&outputContext, nullptr, m_fileExt.c_str(), m_strUrl.c_str());
 	if (ret < 0)
 	{
 		char errStr[256];
@@ -118,6 +119,10 @@ int ffmpeg_to_web::openOutputStream()
 
 	for (int i = 0; i < context->nb_streams; i++)
 	{
+		if (context->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO)
+		{
+			videoStream = i;
+		}
 		AVStream* stream = avformat_new_stream(outputContext, nullptr);
 		ret = avcodec_copy_context(stream->codec, context->streams[i]->codec);
 		if (ret < 0)
@@ -158,6 +163,19 @@ std::shared_ptr<AVPacket> ffmpeg_to_web::readPacketFromSource()
 	int ret = av_read_frame(context, packet.get());
 	if (ret >= 0)
 	{
+		//判断是否需要保存为本地文件
+		if (m_bSaveJPEG)
+		{
+			AVFrame *pFrame;
+			int got_picture;
+			pFrame = av_frame_alloc();
+			avcodec_decode_video2(context->streams[videoStream]->codec, pFrame, &got_picture, packet.get());
+			if (got_picture)
+			{
+				writeJPEG(pFrame, context->streams[videoStream]->codec->width, context->streams[videoStream]->codec->height);
+			}
+			av_freep(pFrame);
+		}
 		return packet;
 	}
 	else
@@ -232,4 +250,105 @@ void ffmpeg_to_web::mainThread()
 			}
 		}
 	}
+
+	ffmpegClose();
+}
+
+void ffmpeg_to_web::writeJPEG(AVFrame * pFrame, int width, int height)
+{
+	std::string fileName = xmlConfig::strWorkPath + "\\picture";
+	if (0 != access(fileName.c_str(), 0))
+		if (0 != mkdir(fileName.c_str()))
+		{
+			LOG(INFO) << "创建文件夹失败，文件夹路径：" << fileName; 				  // 返回 0 表示创建成功，-1 表示失败
+			return;
+		}
+	fileName = fileName + "\\" + xmlConfig::getCurrentTime() + ".jpg";
+
+	// 分配AVFormatContext对象
+	AVFormatContext* pFormatCtx = avformat_alloc_context();
+
+	// 设置输出文件格式
+	pFormatCtx->oformat = av_guess_format("mjpeg", NULL, NULL);
+	// 创建并初始化一个和该url相关的AVIOContext
+	if (avio_open(&pFormatCtx->pb, fileName.c_str(), AVIO_FLAG_READ_WRITE) < 0) 
+	{
+		LOG(INFO) << "打开图片路径失败，图片路径" << fileName;
+	}
+
+	// 构建一个新stream
+	AVStream* pAVStream = avformat_new_stream(pFormatCtx, 0);
+	if (pAVStream == NULL) 
+	{
+		LOG(INFO) << "创建图片输出流失败";
+		return;
+	}
+
+	// 设置该stream的信息
+	AVCodecContext* pCodecCtx = pAVStream->codec;
+
+	pCodecCtx->codec_id = pFormatCtx->oformat->video_codec;
+	pCodecCtx->codec_type = AVMEDIA_TYPE_VIDEO;
+	pCodecCtx->pix_fmt = AV_PIX_FMT_YUVJ420P;
+	pCodecCtx->width = width;
+	pCodecCtx->height = height;
+	pCodecCtx->time_base.num = 1;
+	pCodecCtx->time_base.den = 25;
+
+	// Begin Output some information
+	av_dump_format(pFormatCtx, 0, fileName.c_str(), 1);
+	// End Output some information
+
+	// 查找解码器
+	AVCodec* pCodec = avcodec_find_encoder(pCodecCtx->codec_id);
+	if (!pCodec) {
+		LOG(INFO) << "查找JPEG图片解码器失败，图片路径"<< fileName;
+	}
+	// 设置pCodecCtx的解码器为pCodec
+	if (avcodec_open2(pCodecCtx, pCodec, NULL) < 0) {
+		LOG(INFO) << "打开JPEG图片解码器失败，图片路径" << fileName;
+	}
+
+	//Write Header
+	avformat_write_header(pFormatCtx, NULL);
+
+	int y_size = pCodecCtx->width * pCodecCtx->height;
+
+	//Encode
+	// 给AVPacket分配足够大的空间
+	AVPacket pkt;
+	av_new_packet(&pkt, y_size * 3);
+
+	// 
+	int got_picture = 0;
+	int ret = avcodec_encode_video2(pCodecCtx, &pkt, pFrame, &got_picture);
+	if (ret < 0) {
+		LOG(INFO) << "编码JPEG图片失败，图片路径" << fileName;
+	}
+	if (got_picture == 1) {
+		//pkt.stream_index = pAVStream->index;
+		ret = av_write_frame(pFormatCtx, &pkt);
+	}
+
+	av_free_packet(&pkt);
+
+	//Write Trailer
+	av_write_trailer(pFormatCtx);
+
+	LOG(INFO) << "存储JPEG图片成功，图片路径" << fileName;
+
+	if (pAVStream) 
+	{
+		avcodec_close(pAVStream->codec);
+	}
+
+	avio_close(pFormatCtx->pb);
+
+	avformat_free_context(pFormatCtx);
+}
+
+void ffmpeg_to_web::ffmpegClose()
+{
+	avformat_free_context(context);
+	avformat_free_context(outputContext);
 }

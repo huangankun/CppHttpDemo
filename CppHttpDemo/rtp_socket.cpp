@@ -5,6 +5,7 @@
 rtp_socket::rtp_socket()
 {
 	//m_pCallInfo->m_bExitThread = FALSE;
+	m_bSaveVideo = false;
 }
 
 
@@ -191,9 +192,6 @@ void rtp_socket::sMediaReceiverProc()
 	int maxSN = -1;
 
 	int MaxQueueSize = 1000;
-	std::string filename;
-	filename = "./video-6000.ps";
-	fp = fopen(filename.c_str(), "wb");
 	long num = 0;
 	long prevTime = 0;
 
@@ -241,8 +239,31 @@ void rtp_socket::sMediaReceiverProc()
 		memcpy(one.m_buf, buf + 12, len - 12);
 		PacketArray.push_back(one);
 
-		//if (fp)
-			//fwrite(one.m_buf, 1, len - 12, fp);
+		if (m_bSaveVideo)
+		{
+			if (!fp)
+			{
+				std::string fileName;
+				fileName = xmlConfig::strWorkPath + "\\video";
+				if (0 != access(fileName.c_str(), 0))
+					if (0 != mkdir(fileName.c_str()))
+					{
+						LOG(INFO) << "创建文件夹失败，文件夹路径：" << fileName; 				  // 返回 0 表示创建成功，-1 表示失败
+						return;
+					}
+				fileName = fileName + "\\" + xmlConfig::getCurrentTime() + ".ps";
+				fp = fopen(fileName.c_str(), "wb");
+			}
+			if (fp)
+				fwrite(one.m_buf, 1, len - 12, fp);
+		}
+		else
+		{
+			if (fp)
+			{
+				fclose(fp);
+			}
+		}
 		LOG(DEBUG) << " rtp_socket::run::sMediaReceiverProc RAW add SN= " << one.m_SN;
 
 		if (minSN == -1)

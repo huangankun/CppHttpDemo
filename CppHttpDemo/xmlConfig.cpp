@@ -472,6 +472,23 @@ void xmlConfig::readVideoServerNodes(local_server & local_server)
 }
 
 //************************************
+// Method:    getCurrentTime
+// FullName:  xmlConfig::getCurrentTime
+// Access:    public static 
+// Returns:   std::string
+// Qualifier: 	获取当前系统时间用作保存图片的文件名
+//************************************
+std::string xmlConfig::getCurrentTime()
+{
+	time_t nowTime = time(0);
+	struct tm *infoTm = localtime(&nowTime);
+	char buffer[80];
+	strftime(buffer, 80, "%Y_%m_%d_%H_%M_%S", infoTm);
+	std::string strTime(buffer);
+	return strTime;
+}
+
+//************************************
 // Method:    builPTZControlXml 构建云台控制XML
 // FullName:  xmlConfig::builPTZControlXml
 // Access:    public static 

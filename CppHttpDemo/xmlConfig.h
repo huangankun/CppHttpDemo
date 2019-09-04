@@ -59,4 +59,7 @@ public:
 
 	//配置文件所在路径
 	static std::string configPath;
+
+	//获取当前系统时间用作保存图片的文件名
+	static std::string getCurrentTime();
 };

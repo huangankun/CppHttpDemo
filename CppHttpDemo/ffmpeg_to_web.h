@@ -1,11 +1,13 @@
 #pragma once
 #include "all.h"
+#include "xmlConfig.h"
 extern "C"
 {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavfilter/avfilter.h>
 #include <libavutil//time.h>
+#include <libavutil/avconfig.h>
 }
 
 class ffmpeg_to_web
@@ -16,14 +18,15 @@ public:
 
 	std::string m_strFileName;	//input stream url or file
 	std::string m_strUrl;				//out put stream url
+	std::string m_fileExt;	//转码格式后缀 .flv .hls
 
+	bool m_bSaveJPEG;		//是否保存图片
 	int m_iPort;	//接收端口
+	int videoStream;	//视频流下标
 
 	bool m_bIsRunning;	//thread flag
 	AVFormatContext* outputContext;
 	AVFormatContext* context;
-	AVOutputFormat *ofmt = NULL;
-
 
 	//************************************
 	// Method:    start
@@ -96,5 +99,27 @@ public:
 	// Qualifier: main thread
 	//************************************
 	void mainThread();
+
+	//************************************
+	// Method:    writeJPEG
+	// FullName:  ffmpeg_to_web::writeJPEG
+	// Access:    public 
+	// Returns:   void
+	// Qualifier:	写入JPEG信息
+	// Parameter: AVFrame * pFrame 帧数据
+	// Parameter: int width	图片
+	// Parameter: int height
+	// Parameter: int iIndex
+	//************************************
+	void writeJPEG(AVFrame* pFrame, int width, int height);
+
+	//************************************
+	// Method:    ffmpegClose
+	// FullName:  ffmpeg_to_web::ffmpegClose
+	// Access:    public 
+	// Returns:   void
+	// Qualifier:	销毁ffmpeg相关变量
+	//************************************
+	void ffmpegClose();
 };
 
