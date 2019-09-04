@@ -4,6 +4,9 @@
 #include "rtp_socket.h"
 #include "ffmpeg_to_web.h"
 
+class ffmpeg_to_web;
+class rtp_socket;
+
 #define SUB_UP 0
 #define SUB_DOWN 1
 #define SUB_LEFT 2
