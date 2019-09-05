@@ -204,12 +204,15 @@ void ffmpeg_to_web::mainThread()
 		LOG(INFO) << " ffmpeg_to_web::openInputStream failed, 直到找到最佳输入流";
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
 		while (true)
 		{
 			if (openInputStream() > 0)
 			{
 				break;
 			}
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
 		}
 	}
 	else
@@ -257,8 +260,8 @@ void ffmpeg_to_web::mainThread()
 void ffmpeg_to_web::writeJPEG(AVFrame * pFrame, int width, int height)
 {
 	std::string fileName = xmlConfig::strWorkPath + "\\picture";
-	if (0 != access(fileName.c_str(), 0))
-		if (0 != mkdir(fileName.c_str()))
+	if (0 != _access(fileName.c_str(), 0))
+		if (0 != _mkdir(fileName.c_str()))
 		{
 			LOG(INFO) << "创建文件夹失败，文件夹路径：" << fileName; 				  // 返回 0 表示创建成功，-1 表示失败
 			return;
@@ -345,6 +348,8 @@ void ffmpeg_to_web::writeJPEG(AVFrame * pFrame, int width, int height)
 	avio_close(pFormatCtx->pb);
 
 	avformat_free_context(pFormatCtx);
+
+	m_bSaveJPEG = false;
 }
 
 void ffmpeg_to_web::ffmpegClose()

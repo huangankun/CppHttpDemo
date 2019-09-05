@@ -245,8 +245,8 @@ void rtp_socket::sMediaReceiverProc()
 			{
 				std::string fileName;
 				fileName = xmlConfig::strWorkPath + "\\video";
-				if (0 != access(fileName.c_str(), 0))
-					if (0 != mkdir(fileName.c_str()))
+				if (0 != _access(fileName.c_str(), 0))
+					if (0 != _mkdir(fileName.c_str()))
 					{
 						LOG(INFO) << "创建文件夹失败，文件夹路径：" << fileName; 				  // 返回 0 表示创建成功，-1 表示失败
 						return;

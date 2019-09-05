@@ -196,7 +196,7 @@ int local_server::sendInvite(const char* cameraId, const char* platformIP, int p
 	snprintf(srcCall, 256, "sip:%s@%s", m_strID.c_str(), m_ip.c_str());
 	snprintf(sub, 128, cameraId, m_strID.c_str());
 
-	LOG(INFO) << "local_server::sendInvite，设备ID" << cameraId;
+	LOG(INFO) << "local_server::sendInvite，设备ID：" << cameraId;
 
 	iRet = eXosip_call_build_initial_invite(eCtx, &invite, destCall, srcCall, NULL, sub);
 	if (iRet != OSIP_SUCCESS)
@@ -420,5 +420,6 @@ void local_server::stop()
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 
+	eXosipFree();
 }
 
