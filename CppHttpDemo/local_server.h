@@ -79,7 +79,7 @@ public:
 	int sendBye(int callId, int dialogId);
 	int sendQueryCatalog(const char* platformID, int sn, const char* platformIP, int platformPort);
 	int sendPTZCMD(const char* deviceID, const int sn, const char* ptzCode, const char* platformID, const char* platformIP, int platformPort);
-	int sendPlayBack(const char* cameraId, const char* platformIP, int platformPort, int cameraPort, std::string startTime, std::string endTime);
+	int sendPlayBack(const char* cameraId, const char* platformIP, int platformPort, int cameraPort, time_t startTime, time_t endTime);
 	std::string getPTZCode(const int m_iSubCMD);
 };
 

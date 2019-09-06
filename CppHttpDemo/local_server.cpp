@@ -97,12 +97,12 @@ void local_server::gb28181ServerThread()
 			case EXOSIP_CALL_ANSWERED:
 			{
 				osip_message_t* ack = NULL;
-				osip_contact_t *co = NULL;
-				co = (osip_contact_t *)osip_list_get(&je->request->contacts, 0);
+				//osip_contact_t *co = NULL;
+				//co = (osip_contact_t *)osip_list_get(&je->request->req_uri->, 0);
 				std::list<video_server>::iterator it;
 				for (it = m_platformList.begin(); it != m_platformList.end(); it++)
 				{
-					if (co->url->username == it->m_strID)
+					if (je->request->req_uri->host == it->m_strIP)
 					{
 						LOG(INFO) << "EXOSIP_CALL_ANSWERED je->cid£º" << je->cid << " je->did£º" << je->did;
 						it->call_id = je->cid;
@@ -111,6 +111,18 @@ void local_server::gb28181ServerThread()
 						eXosip_lock(eCtx);
 						eXosip_call_send_ack(eCtx, je->did, ack);
 						eXosip_unlock(eCtx);
+
+						std::list<camera_info>::iterator ct;
+						for (ct = m_cameraList.begin();ct!=m_cameraList.end();ct++)
+						{
+							if (je->request->req_uri->username == ct->strCamId)
+							{
+								ct->m_ffmpeg->start();
+								ct->m_rtpSocket->start();
+								break;
+							}
+						}
+						break;
 					}
 				}
 				//log for call_id dialog_ id
@@ -295,7 +307,7 @@ int local_server::sendPTZCMD(const char* deviceID, const int sn, const char* ptz
 	return iRet;
 }
 
-int local_server::sendPlayBack(const char* cameraId, const char* platformIP, int platformPort, int cameraPort, std::string startTime, std::string endTime)
+int local_server::sendPlayBack(const char* cameraId, const char* platformIP, int platformPort, int cameraPort, time_t startTime, time_t endTime)
 {
 	char destCall[256], srcCall[256], sub[128];
 
@@ -315,20 +327,19 @@ int local_server::sendPlayBack(const char* cameraId, const char* platformIP, int
 		LOG(INFO) << "local_server::sendPlayBack::eXosip_call_build_initial_inviteÊ§°Ü£¬·µ»ØÂë£º" << iRet;
 		return iRet;
 	}
-
 	char body[2048];
 	int bodyLen = snprintf(body, 2048,
 		"v=0\r\n"
 		"o=%s 0 0 IN IP4 %s\r\n"
 		"s=Playback\r\n"
 		"c=IN IP4 %s\r\n"
-		"t=%s %s\r\n"
+		"t=%lld %lld\r\n"
 		"m=video %d RTP/AVP 96 97 98\r\n"
 		"a=rtpmap:96 PS/90000\r\n"
 		"a=rtpmap:97 MPEG4/90000\r\n"
 		"a=rtpmap:98 H264/90000\r\n"
 		"a=recvonly\r\n", cameraId, m_ip.c_str(),
-		m_ip.c_str(), startTime.c_str(), endTime.c_str(), cameraPort);
+		m_ip.c_str(), startTime, endTime, cameraPort);
 	osip_message_set_body(invite, body, bodyLen);
 	osip_message_set_content_type(invite, "APPLICATION/SDP");
 	eXosip_lock(eCtx);

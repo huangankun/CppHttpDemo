@@ -55,7 +55,10 @@ bool handle_fun2(std::string url, std::string body, mg_connection *c, OnRspCallb
 	std::cout << "url: " << url << std::endl;
 	std::cout << "body: " << body << std::endl;
 	//testServer.sendQueryCatalog("35080000002000000128", 5000, "112.111.229.121", 7100);
-	testServer.sendInvite("35080224001310129637", "35080000002000000128", 7100, 6000);
+	testServer.sendInvite("35080224001310129637", "112.111.229.121", 7100, 6000);
+	time_t endTm = time(0);
+	time_t startTm = endTm - 10000;
+	//testServer.sendPlayBack("34000000001317006215", "117.71.25.9", 7100, 6000, startTm, endTm);
 	camera_info myCamera;
 	myCamera.iRecvPort = 6000;
 	myCamera.m_ffmpeg = new ffmpeg_to_web();
@@ -69,8 +72,8 @@ bool handle_fun2(std::string url, std::string body, mg_connection *c, OnRspCallb
 	myCamera.m_rtpSocket->m_iPort = 6000;
 	myCamera.running = false;
 	myCamera.strCamId = "35080224001310129637";
-	myCamera.m_rtpSocket->start();
-	myCamera.m_ffmpeg->start();
+	//myCamera.m_rtpSocket->start();
+	//myCamera.m_ffmpeg->start();
 	testServer.m_cameraList.push_back(myCamera);
 	rsp_callback(c, "rsp2");
 

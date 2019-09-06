@@ -83,7 +83,7 @@ int ffmpeg_to_web::openInputStream()
 
 	LOG(INFO) << " ffmpeg_to_web::openInputStream avformat_find_stream_info成功，已找到最佳流，等待打开输出流...";
 
-	av_dump_format(context, 0, m_strFileName.c_str(), 0);
+	//av_dump_format(context, 0, m_strFileName.c_str(), 0);
 
 	return ret;
 }
@@ -149,7 +149,7 @@ int ffmpeg_to_web::openOutputStream()
 		return ret;
 	}
 
-	av_dump_format(outputContext, 0, m_strUrl.c_str(), 0);
+	//av_dump_format(outputContext, 0, m_strUrl.c_str(), 0);
 
 	LOG(INFO) << " ffmpeg_to_web::openInputStream avformat_write_header成功，正在准备发送流数据到服务器...";
 
@@ -169,12 +169,27 @@ std::shared_ptr<AVPacket> ffmpeg_to_web::readPacketFromSource()
 			AVFrame *pFrame;
 			int got_picture;
 			pFrame = av_frame_alloc();
-			avcodec_decode_video2(context->streams[videoStream]->codec, pFrame, &got_picture, packet.get());
+			AVCodecContext *pCodecCtx;
+			AVCodec *pCodec;
+			pCodecCtx = context->streams[videoStream]->codec;
+			pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
+			if (pCodec == NULL) {
+				LOG(INFO) << "avcode find decoder failed!\n";
+				exit(1);
+			}
+
+			//打开解码器
+			if (avcodec_open2(pCodecCtx, pCodec, NULL) < 0) {
+				LOG(INFO) << "avcode open failed!\n";
+				exit(1);
+			}
+			avcodec_decode_video2(pCodecCtx, pFrame, &got_picture, packet.get());
 			if (got_picture)
 			{
-				writeJPEG(pFrame, context->streams[videoStream]->codec->width, context->streams[videoStream]->codec->height);
+				writeJPEG(pFrame, pCodecCtx->width, pCodecCtx->height);
 			}
 			av_freep(pFrame);
+			//avcodec_close(pCodecCtx);
 		}
 		return packet;
 	}
@@ -228,10 +243,9 @@ void ffmpeg_to_web::mainThread()
 			return;
 		}
 
-
+		int packetCount = 0;
 		while (m_bIsRunning)
 		{
-			int packetCount = 0;
 			std::shared_ptr<AVPacket> packet = nullptr;
 			packet = readPacketFromSource();
 			if (packet)

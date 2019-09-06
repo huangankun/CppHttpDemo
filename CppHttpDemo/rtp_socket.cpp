@@ -215,7 +215,7 @@ void rtp_socket::sMediaReceiverProc()
 		USHORT port = (pItem->Uaddr).sin_port;
 		char* chIP = inet_ntoa(addrClient.sin_addr);
 		
-		LOG(INFO) << " rtp_socket::run::sMediaReceiverProc RTP客户端 IP地址："<<chIP<<" 端口号："<<addrClient.sin_port;
+		//LOG(INFO) << " rtp_socket::run::sMediaReceiverProc RTP客户端 IP地址："<<chIP<<" 端口号："<<addrClient.sin_port;
 
 		pItem->m_PT = buf[1] & 0x7F;
 		pItem->m_SN = htons((*(unsigned short *)(buf + 2)));
@@ -264,7 +264,7 @@ void rtp_socket::sMediaReceiverProc()
 				fclose(fp);
 			}
 		}
-		LOG(DEBUG) << " rtp_socket::run::sMediaReceiverProc RAW add SN= " << one.m_SN;
+		//LOG(DEBUG) << " rtp_socket::run::sMediaReceiverProc RAW add SN= " << one.m_SN;
 
 		if (minSN == -1)
 		{
@@ -322,7 +322,7 @@ void rtp_socket::sMediaReceiverProc()
 						sendto(pItem->USocket, it->m_buf, it->m_len, 0, (SOCKADDR *)&(pItem->Uaddr), sizeof(SOCKADDR));
 						found = TRUE;
 
-						LOG(DEBUG) << " rtp_socket::run::sMediaReceiverProc sendBuf长度：" << it->m_len << " SN：" << sn;
+						//LOG(DEBUG) << " rtp_socket::run::sMediaReceiverProc sendBuf长度：" << it->m_len << " SN：" << sn;
 
 						free(it->m_buf);
 						it = PacketArray.erase(it);
@@ -364,18 +364,18 @@ void rtp_socket::sRTCPProc()
 		for (int i = 0; i < 10; i++)
 		{
 
-			LOG(DEBUG) << " rtp_socket::run::sRTCPProc recvfrom之前";
+			//LOG(DEBUG) << " rtp_socket::run::sRTCPProc recvfrom之前";
 
 			len = recvfrom(pItem->CSocket, (char *)buf, size, 0, (SOCKADDR*)&addrClient, &sock_addr_size);
 
-			LOG(DEBUG) << " rtp_socket::run::sRTCPProc recvfrom之后，接收长度：" << len;
+			//LOG(DEBUG) << " rtp_socket::run::sRTCPProc recvfrom之后，接收长度：" << len;
 
 			if (len <= 0)
 			{
 				int errorCode = WSAGetLastError();
 				retryCount += 1;
 
-				LOG(DEBUG) << " rtp_socket::run::sRTCPProc recvfrom出错，接收端口：" << pItem->m_iRTPPort + 1 << " 错误码：" << errorCode << " 重新接收次数：" << retryCount;
+				//LOG(DEBUG) << " rtp_socket::run::sRTCPProc recvfrom出错，接收端口：" << pItem->m_iRTPPort + 1 << " 错误码：" << errorCode << " 重新接收次数：" << retryCount;
 
 				if (errorCode != WSAECONNRESET) //忽略掉winsock 的一个bug
 				{
@@ -384,7 +384,7 @@ void rtp_socket::sRTCPProc()
 				continue;
 			}
 
-			LOG(DEBUG) << " rtp_socket::run::sRTCPProc break ten loop";
+			//LOG(DEBUG) << " rtp_socket::run::sRTCPProc break ten loop";
 
 			break;
 		}
@@ -397,7 +397,7 @@ void rtp_socket::sRTCPProc()
 		}
 		int rtcp_typeTmp = buf[1];
 
-		LOG(DEBUG) << " rtp_socket::run::sRTCPProc rtcp_type = " << rtcp_typeTmp;
+		//LOG(DEBUG) << " rtp_socket::run::sRTCPProc rtcp_type = " << rtcp_typeTmp;
 
 		if (buf[1] >= 200)
 		{
@@ -441,7 +441,7 @@ void rtp_socket::sRTCPProc()
 				send_data[23] = CNAME[5];
 				char* chIP = inet_ntoa(addrClient.sin_addr);
 
-				LOG(DEBUG) << " rtp_socket::run::sRTCPProc 端口：" << pItem->m_iRTPPort + 1 << " 发送IP地址：" << chIP << " 发送端口：" << addrClient.sin_port;
+				//LOG(DEBUG) << " rtp_socket::run::sRTCPProc 端口：" << pItem->m_iRTPPort + 1 << " 发送IP地址：" << chIP << " 发送端口：" << addrClient.sin_port;
 
 				//修复bug，解决RTCP发送Receive回复包通过RTP Socket发送
 				sendto(pItem->CSocket, (char *)send_data, 24, 0, (SOCKADDR *)&addrClient, sock_addr_size);
