@@ -253,16 +253,16 @@ void ffmpeg_to_web::mainThread()
 				packetCount++;
 				if (writePacket(packet) >= 0)
 				{
-					LOG(DEBUG) << " ffmpeg_to_web::writePacket 成功，已发送：" << packetCount << "帧";
+					//LOG(DEBUG) << " ffmpeg_to_web::writePacket 成功，已发送：" << packetCount << "帧";
 				}
 				else
 				{
-					LOG(DEBUG) << " ffmpeg_to_web::writePacket 失败，第" << packetCount << "帧";
+					//LOG(DEBUG) << " ffmpeg_to_web::writePacket 失败，第" << packetCount << "帧";
 				}
 			}
 			else
 			{
-				LOG(DEBUG) << " ffmpeg_to_web::readPacketFromSource 读取帧失败，第" << packetCount << "帧";
+				//LOG(DEBUG) << " ffmpeg_to_web::readPacketFromSource 读取帧失败，第" << packetCount << "帧";
 				return;
 			}
 		}

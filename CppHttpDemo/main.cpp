@@ -17,27 +17,52 @@ bool handle_fun1(std::string url, std::string body, mg_connection *c, OnRspCallb
 {
 	// do sth 解析json请求，判断现有的目录中是否有对应的相机然后发送invite并启动rtmp线程，返回相应http请求。
 
-	/*cJSON* bodyJson = cJSON_Parse(body.c_str());
+	cJSON* bodyJson = cJSON_Parse(body.c_str());
 	cJSON* paramJson = cJSON_GetObjectItemCaseSensitive(bodyJson, "userparam");
 	cJSON* usernameJson = cJSON_GetObjectItemCaseSensitive(paramJson, "username");
 	cJSON* deviceIDJson = cJSON_GetObjectItemCaseSensitive(paramJson, "deviceid");
+	cJSON* paramJson2 = cJSON_GetObjectItemCaseSensitive(bodyJson, "parameter");
+	cJSON* urlJson = cJSON_GetObjectItemCaseSensitive(paramJson2, "url");
+	cJSON* portJson = cJSON_GetObjectItemCaseSensitive(paramJson2, "port");
+
 	std::string deviceid = deviceIDJson->valuestring;
 	std::string username = usernameJson->valuestring;
-	if (username == testServer.platformServer.m_strID)
-	{*/
-		//if (testServer.platformServer.xmlCatalog.find(deviceid) != std::string::npos)
-		//{
-			//testServer.sendInvite("34000000001317006215", 6000);
-		//}
-	//}
+	std::string urlRtmp = urlJson->valuestring;
+	int portRecv = portJson->valueint;
+
+	std::list<video_server>::iterator vt;
+	for (vt=testServer.m_platformList.begin();vt!=testServer.m_platformList.end();vt++)
+	{
+		if (username == vt->m_strID)
+		{
+			testServer.sendInvite(deviceid.c_str(), vt->m_strIP.c_str(), vt->m_iPort, portRecv);
+			camera_info myCamera;
+			myCamera.iRecvPort = portRecv;
+			myCamera.m_ffmpeg = new ffmpeg_to_web();
+			myCamera.m_ffmpeg->m_bSaveJPEG = false;
+			myCamera.m_ffmpeg->m_bIsRunning = true;
+			myCamera.m_ffmpeg->m_fileExt = "flv";
+			myCamera.m_ffmpeg->m_strUrl = urlRtmp;
+			int udpPort = 30000 + portRecv;
+			char bufUdp[80];
+			snprintf(bufUdp, 80, "udp://127.0.0.1:%d?buffer_size=655360", udpPort);
+			myCamera.m_ffmpeg->m_strFileName = bufUdp;
+			myCamera.m_rtpSocket = new rtp_socket();
+			myCamera.m_rtpSocket->m_bSaveVideo = false;
+			myCamera.m_rtpSocket->m_iPort = portRecv;
+			myCamera.running = false;
+			myCamera.strCamId = deviceid;
+			testServer.m_cameraList.push_back(myCamera);
+		}
+	}
 
 	//testServer.sendInvite("34032301051315041603", 6666);
 	cJSON *monitor = cJSON_CreateObject();
 	cJSON *code = cJSON_CreateNumber(1);
 	cJSON *message = cJSON_CreateString("succeed");
 	cJSON *dataUrl = cJSON_CreateObject();
-	cJSON *urlJson = cJSON_CreateString("rtmp://127.0.0.1:1935/live");
-	cJSON_AddItemToObject(dataUrl, "url", urlJson);
+	cJSON *urlJson2 = cJSON_CreateString("rtmp://127.0.0.1:1935/live");
+	cJSON_AddItemToObject(dataUrl, "url", urlJson2);
 	cJSON_AddItemToObject(monitor, "code", code);
 	cJSON_AddItemToObject(monitor, "message", message);
 	cJSON_AddItemToObject(monitor, "data", dataUrl);
@@ -56,8 +81,8 @@ bool handle_fun2(std::string url, std::string body, mg_connection *c, OnRspCallb
 	std::cout << "body: " << body << std::endl;
 	//testServer.sendQueryCatalog("35080000002000000128", 5000, "112.111.229.121", 7100);
 	testServer.sendInvite("35080224001310129637", "112.111.229.121", 7100, 6000);
-	time_t endTm = time(0);
-	time_t startTm = endTm - 10000;
+	//time_t endTm = time(0);
+	//time_t startTm = endTm - 10000;
 	//testServer.sendPlayBack("34000000001317006215", "117.71.25.9", 7100, 6000, startTm, endTm);
 	camera_info myCamera;
 	myCamera.iRecvPort = 6000;
@@ -72,8 +97,6 @@ bool handle_fun2(std::string url, std::string body, mg_connection *c, OnRspCallb
 	myCamera.m_rtpSocket->m_iPort = 6000;
 	myCamera.running = false;
 	myCamera.strCamId = "35080224001310129637";
-	//myCamera.m_rtpSocket->start();
-	//myCamera.m_ffmpeg->start();
 	testServer.m_cameraList.push_back(myCamera);
 	rsp_callback(c, "rsp2");
 
