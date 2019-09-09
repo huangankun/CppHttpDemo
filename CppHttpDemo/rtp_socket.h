@@ -52,7 +52,7 @@ public:
 	~rtp_socket();
 	int m_iPort;
 	bool m_bSaveVideo;	//保存码流标识位
-	int InitSendSocket(const char *ip, int port, CALL_INFO_ST *&item);
+	int InitSendSocket(const char *ip, int port);
 	void start();
 	CALL_INFO_ST *m_pCallInfo;
 	void stop(bool isWait = false);

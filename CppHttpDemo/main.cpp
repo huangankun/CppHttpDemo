@@ -13,7 +13,7 @@ std::unordered_map<std::string, ReqHandler> HttpServer::s_handler_map;
 std::unordered_set<mg_connection *> HttpServer::s_websocket_session_set;
 local_server testServer;
 
-bool handle_fun1(std::string url, std::string body, mg_connection *c, OnRspCallback rsp_callback)
+bool handle_stop_gb_to_rtmp(std::string url, std::string body, mg_connection *c, OnRspCallback rsp_callback)
 {
 	// do sth 解析json请求，判断现有的目录中是否有对应的相机然后发送invite并启动rtmp线程，返回相应http请求。
 
@@ -31,7 +31,75 @@ bool handle_fun1(std::string url, std::string body, mg_connection *c, OnRspCallb
 	int portRecv = portJson->valueint;
 
 	std::list<video_server>::iterator vt;
+	std::list<camera_info>::iterator ca;
+	bool isExist = false;
 	for (vt=testServer.m_platformList.begin();vt!=testServer.m_platformList.end();vt++)
+	{
+		if (username == vt->m_strID)
+		{
+			for (ca = testServer.m_cameraList.begin(); ca != testServer.m_cameraList.end(); ca++)
+			{
+				if (ca->strCamId == deviceid)
+				{
+					isExist = true;
+					testServer.sendBye(ca->call_id, ca->dialog_id);
+					ca->m_ffmpeg->stop();
+					ca->m_rtpSocket->stop();
+					testServer.m_cameraList.erase(ca);
+					break;
+				}
+			}
+		}
+	}
+
+	//testServer.sendInvite("34032301051315041603", 6666);
+	cJSON *monitor = cJSON_CreateObject();
+	if (isExist)
+	{
+		LOG(INFO) << "Stop gb to rtmp, deviceid: " << deviceid;
+		cJSON *code = cJSON_CreateNumber(1);
+		cJSON *message = cJSON_CreateString("succeed");
+		cJSON *dataUrl = cJSON_CreateObject();
+		cJSON *urlJson2 = cJSON_CreateString(urlRtmp.c_str());
+		cJSON_AddItemToObject(dataUrl, "url", urlJson2);
+		cJSON_AddItemToObject(monitor, "code", code);
+		cJSON_AddItemToObject(monitor, "message", message);
+		cJSON_AddItemToObject(monitor, "data", dataUrl);
+	}
+	else
+	{
+		LOG(INFO) << "deviceid: " << deviceid<<"does not exist";
+		cJSON *code = cJSON_CreateNumber(0);
+		cJSON *message = cJSON_CreateString("not exist");
+		cJSON_AddItemToObject(monitor, "code", code);
+		cJSON_AddItemToObject(monitor, "message", message);
+	}
+	char *strTmp = cJSON_Print(monitor);
+
+	rsp_callback(c, strTmp);
+
+	return true;
+}
+
+bool handle_start_gb_to_rtmp(std::string url, std::string body, mg_connection *c, OnRspCallback rsp_callback)
+{
+	// do sth 解析json请求，判断现有的目录中是否有对应的相机然后发送invite并启动rtmp线程，返回相应http请求。
+
+	cJSON* bodyJson = cJSON_Parse(body.c_str());
+	cJSON* paramJson = cJSON_GetObjectItemCaseSensitive(bodyJson, "userparam");
+	cJSON* usernameJson = cJSON_GetObjectItemCaseSensitive(paramJson, "username");
+	cJSON* deviceIDJson = cJSON_GetObjectItemCaseSensitive(paramJson, "deviceid");
+	cJSON* paramJson2 = cJSON_GetObjectItemCaseSensitive(bodyJson, "parameter");
+	cJSON* urlJson = cJSON_GetObjectItemCaseSensitive(paramJson2, "url");
+	cJSON* portJson = cJSON_GetObjectItemCaseSensitive(paramJson2, "port");
+
+	std::string deviceid = deviceIDJson->valuestring;
+	std::string username = usernameJson->valuestring;
+	std::string urlRtmp = urlJson->valuestring;
+	int portRecv = portJson->valueint;
+
+	std::list<video_server>::iterator vt;
+	for (vt = testServer.m_platformList.begin(); vt != testServer.m_platformList.end(); vt++)
 	{
 		if (username == vt->m_strID)
 		{
@@ -61,7 +129,7 @@ bool handle_fun1(std::string url, std::string body, mg_connection *c, OnRspCallb
 	cJSON *code = cJSON_CreateNumber(1);
 	cJSON *message = cJSON_CreateString("succeed");
 	cJSON *dataUrl = cJSON_CreateObject();
-	cJSON *urlJson2 = cJSON_CreateString("rtmp://127.0.0.1:1935/live");
+	cJSON *urlJson2 = cJSON_CreateString(urlRtmp.c_str());
 	cJSON_AddItemToObject(dataUrl, "url", urlJson2);
 	cJSON_AddItemToObject(monitor, "code", code);
 	cJSON_AddItemToObject(monitor, "message", message);
@@ -69,36 +137,6 @@ bool handle_fun1(std::string url, std::string body, mg_connection *c, OnRspCallb
 	char *strTmp = cJSON_Print(monitor);
 
 	rsp_callback(c, strTmp);
-
-	return true;
-}
-
-bool handle_fun2(std::string url, std::string body, mg_connection *c, OnRspCallback rsp_callback)
-{
-	// do sth
-	std::cout << "handle fun2" << std::endl;
-	std::cout << "url: " << url << std::endl;
-	std::cout << "body: " << body << std::endl;
-	//testServer.sendQueryCatalog("35080000002000000128", 5000, "112.111.229.121", 7100);
-	testServer.sendInvite("35080224001310129637", "112.111.229.121", 7100, 6000);
-	//time_t endTm = time(0);
-	//time_t startTm = endTm - 10000;
-	//testServer.sendPlayBack("34000000001317006215", "117.71.25.9", 7100, 6000, startTm, endTm);
-	camera_info myCamera;
-	myCamera.iRecvPort = 6000;
-	myCamera.m_ffmpeg = new ffmpeg_to_web();
-	myCamera.m_ffmpeg->m_bSaveJPEG = true;
-	myCamera.m_ffmpeg->m_bIsRunning = true;
-	myCamera.m_ffmpeg->m_fileExt = "flv";
-	myCamera.m_ffmpeg->m_strUrl = "rtmp://127.0.0.1:1935/live";
-	myCamera.m_ffmpeg->m_strFileName = "udp://127.0.0.1:36000?buffer_size=655360";
-	myCamera.m_rtpSocket = new rtp_socket();
-	myCamera.m_rtpSocket->m_bSaveVideo = false;
-	myCamera.m_rtpSocket->m_iPort = 6000;
-	myCamera.running = false;
-	myCamera.strCamId = "35080224001310129637";
-	testServer.m_cameraList.push_back(myCamera);
-	rsp_callback(c, "rsp2");
 
 	return true;
 }
@@ -113,8 +151,8 @@ int main(int argc, char *argv[])
 	testServer.start();
 
 	// add handler
-	http_server->AddHandler("/realvideo", handle_fun1);
-	http_server->AddHandler("/api/fun2", handle_fun2);
+	http_server->AddHandler("/startGb2Rtmp", handle_start_gb_to_rtmp);
+	http_server->AddHandler("/stopGb2Rtmp", handle_stop_gb_to_rtmp);
 	http_server->Start();
 	LOG(INFO) << "***** 程序结束 *****";
 }

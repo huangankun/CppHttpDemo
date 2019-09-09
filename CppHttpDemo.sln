@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.28307.489
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "httpServer", "CppHttpDemo\CppHttpDemo.vcxproj", "{A7C11E9C-20E5-4514-9AE5-13BE1B996A73}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EVOCX3", "E:\qixia_evocx-master-e16760898076a00506962f5062b9aafbd3511c43\qixia_evocx-master-e16760898076a00506962f5062b9aafbd3511c43qixia_evocx.git\EVOCX3.vcxproj", "{31A495A9-599B-4993-A06A-FE6F4D9ADAA1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -39,6 +41,21 @@ Global
 		{A7C11E9C-20E5-4514-9AE5-13BE1B996A73}.Unicode Release|x64.Build.0 = Release|x64
 		{A7C11E9C-20E5-4514-9AE5-13BE1B996A73}.Unicode Release|x86.ActiveCfg = Release|Win32
 		{A7C11E9C-20E5-4514-9AE5-13BE1B996A73}.Unicode Release|x86.Build.0 = Release|Win32
+		{31A495A9-599B-4993-A06A-FE6F4D9ADAA1}.Debug|x64.ActiveCfg = Debug|Win32
+		{31A495A9-599B-4993-A06A-FE6F4D9ADAA1}.Debug|x86.ActiveCfg = Debug|Win32
+		{31A495A9-599B-4993-A06A-FE6F4D9ADAA1}.Debug|x86.Build.0 = Debug|Win32
+		{31A495A9-599B-4993-A06A-FE6F4D9ADAA1}.Release|x64.ActiveCfg = Release|Win32
+		{31A495A9-599B-4993-A06A-FE6F4D9ADAA1}.Release|x86.ActiveCfg = Release|Win32
+		{31A495A9-599B-4993-A06A-FE6F4D9ADAA1}.Release|x86.Build.0 = Release|Win32
+		{31A495A9-599B-4993-A06A-FE6F4D9ADAA1}.Template|x64.ActiveCfg = Template|Win32
+		{31A495A9-599B-4993-A06A-FE6F4D9ADAA1}.Template|x86.ActiveCfg = Template|Win32
+		{31A495A9-599B-4993-A06A-FE6F4D9ADAA1}.Template|x86.Build.0 = Template|Win32
+		{31A495A9-599B-4993-A06A-FE6F4D9ADAA1}.Unicode Debug|x64.ActiveCfg = Unicode Debug|Win32
+		{31A495A9-599B-4993-A06A-FE6F4D9ADAA1}.Unicode Debug|x86.ActiveCfg = Unicode Debug|Win32
+		{31A495A9-599B-4993-A06A-FE6F4D9ADAA1}.Unicode Debug|x86.Build.0 = Unicode Debug|Win32
+		{31A495A9-599B-4993-A06A-FE6F4D9ADAA1}.Unicode Release|x64.ActiveCfg = Unicode Release|Win32
+		{31A495A9-599B-4993-A06A-FE6F4D9ADAA1}.Unicode Release|x86.ActiveCfg = Unicode Release|Win32
+		{31A495A9-599B-4993-A06A-FE6F4D9ADAA1}.Unicode Release|x86.Build.0 = Unicode Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

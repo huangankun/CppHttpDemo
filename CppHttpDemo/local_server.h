@@ -21,6 +21,8 @@ struct camera_info
 	int status;
 	int statusErrCnt;
 	int running;
+	int call_id;	//连接ID
+	int dialog_id;	//会话ID
 	rtp_socket *m_rtpSocket;
 	ffmpeg_to_web *m_ffmpeg;
 };
@@ -40,8 +42,6 @@ struct video_server
 
 	bool m_bKeepAlive;			//保活
 	bool m_bReceiveRTCP;	//接收RTCP
-	int call_id;	//连接ID
-	int dialog_id;	//会话ID
 	int isRegister;	//判断是否是注册请求
 	int m_SN;		//信令计数器，没法送一次控制类型信令自增1
 };

@@ -121,5 +121,16 @@ public:
 	// Qualifier:	销毁ffmpeg相关变量
 	//************************************
 	void ffmpegClose();
+
+
+	//************************************
+	// Method:    interruptReadFrame
+	// FullName:  ffmpeg_to_web::interruptReadFrame
+	// Access:    public 
+	// Returns:   int
+	// Qualifier:	线程需要退出时打断持续读取视频帧
+	// Parameter: void* ctx
+	//************************************
+	static int interruptReadFrame(void* ctx);
 };
 

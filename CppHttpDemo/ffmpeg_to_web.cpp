@@ -27,12 +27,7 @@ void ffmpeg_to_web::start()
 
 void ffmpeg_to_web::stop()
 {
-	LOG(INFO) << " ffmpeg_to_web::stop 调用，主线程停止";
-
-	while (m_bIsRunning)
-	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	}
+	m_bIsRunning = false;
 }
 
 void ffmpeg_to_web::ffmpegInit()
@@ -50,16 +45,18 @@ int ffmpeg_to_web::openInputStream()
 	LOG(INFO) << " ffmpeg_to_web::openInputStream 打开输入流，查找最佳流";
 
 	context = avformat_alloc_context();
+	context->interrupt_callback.callback = interruptReadFrame;
+	context->interrupt_callback.opaque = this;
 	AVDictionary* dicts = NULL;
 	AVInputFormat* ifmt = av_find_input_format("h264");
 	AVCodec *pCodec;
 	AVDictionary* format_opts = NULL;
 
 	int ret = 0;
-	av_dict_set(&dicts, "protocol_whitelist", "file,udp", 0);
-	av_dict_set(&dicts, "timeout", "10000000", 0);
-	av_dict_set(&dicts, "rtbufsize", "655360", 0);
-	av_dict_set(&dicts, "bufsize", "655360", 0);
+	//av_dict_set(&dicts, "protocol_whitelist", "file,udp", 0);
+	av_dict_set(&dicts, "timeout", "10000", 0);
+	//av_dict_set(&dicts, "rtbufsize", "655360", 0);
+	//av_dict_set(&dicts, "bufsize", "655360", 0);
 
 	ret = avformat_open_input(&context, m_strFileName.c_str(), nullptr, nullptr);
 	if (ret < 0)
@@ -220,9 +217,9 @@ void ffmpeg_to_web::mainThread()
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-		while (true)
+		while (m_bIsRunning)
 		{
-			if (openInputStream() > 0)
+			if (openInputStream() >= 0)
 			{
 				break;
 			}
@@ -230,41 +227,45 @@ void ffmpeg_to_web::mainThread()
 			std::this_thread::sleep_for(std::chrono::milliseconds(50));
 		}
 	}
-	else
+
+
+
+	if (openOutputStream() < 0)
 	{
-		LOG(INFO) << " ffmpeg_to_web::openInputStream failed, 直到找到最佳输入流";
+		LOG(INFO) << " ffmpeg_to_web::openOutputStream failed, 直到找到最佳输入流";
 
-		if (openOutputStream() < 0)
-		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(10000));
-
-			LOG(INFO) << " ffmpeg_to_web::openOutputStream failed, 线程退出";
-
-			return;
-		}
-
-		int packetCount = 0;
 		while (m_bIsRunning)
 		{
-			std::shared_ptr<AVPacket> packet = nullptr;
-			packet = readPacketFromSource();
-			if (packet)
+			if (openOutputStream() >= 0)
 			{
-				packetCount++;
-				if (writePacket(packet) >= 0)
-				{
-					//LOG(DEBUG) << " ffmpeg_to_web::writePacket 成功，已发送：" << packetCount << "帧";
-				}
-				else
-				{
-					//LOG(DEBUG) << " ffmpeg_to_web::writePacket 失败，第" << packetCount << "帧";
-				}
+				break;
+			}
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		}
+	}
+
+	int packetCount = 0;
+	while (m_bIsRunning)
+	{
+		std::shared_ptr<AVPacket> packet = nullptr;
+		packet = readPacketFromSource();
+		if (packet)
+		{
+			packetCount++;
+			if (writePacket(packet) >= 0)
+			{
+				//LOG(DEBUG) << " ffmpeg_to_web::writePacket 成功，已发送：" << packetCount << "帧";
 			}
 			else
 			{
-				//LOG(DEBUG) << " ffmpeg_to_web::readPacketFromSource 读取帧失败，第" << packetCount << "帧";
-				return;
+				//LOG(DEBUG) << " ffmpeg_to_web::writePacket 失败，第" << packetCount << "帧";
 			}
+		}
+		else
+		{
+			//LOG(DEBUG) << " ffmpeg_to_web::readPacketFromSource 读取帧失败，第" << packetCount << "帧";
+			return;
 		}
 	}
 
@@ -368,6 +369,19 @@ void ffmpeg_to_web::writeJPEG(AVFrame * pFrame, int width, int height)
 
 void ffmpeg_to_web::ffmpegClose()
 {
+	avio_close(context->pb);
+	avio_close(outputContext->pb);
 	avformat_free_context(context);
 	avformat_free_context(outputContext);
+	LOG(INFO) << " ffmpeg_to_web::stop 调用，主线程停止";
+}
+
+int ffmpeg_to_web::interruptReadFrame(void* ctx)
+{
+	auto p = (ffmpeg_to_web *)ctx;
+	if (!p->m_bIsRunning)
+	{
+		return AVERROR_EOF;
+	}
+	return 0;
 }

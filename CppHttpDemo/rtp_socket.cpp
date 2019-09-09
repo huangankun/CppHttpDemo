@@ -11,9 +11,10 @@ rtp_socket::rtp_socket()
 
 rtp_socket::~rtp_socket()
 {
+	//delete m_pCallInfo;
 }
 
-int rtp_socket::InitSendSocket(const char * ip, int port, CALL_INFO_ST *& item)
+int rtp_socket::InitSendSocket(const char * ip, int port)
 {
 	WORD wVersionRequested;
 	WSADATA wsaData;
@@ -31,11 +32,11 @@ int rtp_socket::InitSendSocket(const char * ip, int port, CALL_INFO_ST *& item)
 		return -2;
 	}
 
-	memset(&item->Uaddr, 0, sizeof(SOCKADDR_IN));
+	memset(&m_pCallInfo->Uaddr, 0, sizeof(SOCKADDR_IN));
 
-	item->Uaddr.sin_family = AF_INET;
-	item->Uaddr.sin_addr.S_un.S_addr = inet_addr(ip);
-	item->Uaddr.sin_port = htons(port);
+	m_pCallInfo->Uaddr.sin_family = AF_INET;
+	m_pCallInfo->Uaddr.sin_addr.S_un.S_addr = inet_addr(ip);
+	m_pCallInfo->Uaddr.sin_port = htons(port);
 
 	return iSendSocket;
 }
@@ -58,20 +59,26 @@ void rtp_socket::stop(bool isWait)
 		{
 			shutdown(m_pCallInfo->CSocket, SD_BOTH);
 			closesocket(m_pCallInfo->CSocket);
+			WSACleanup();
+			//LOG(INFO) << "rtcp接收socket已经关闭";
 		}
 		if (m_pCallInfo->RSocket != INVALID_SOCKET)
 		{
 			shutdown(m_pCallInfo->RSocket, SD_BOTH);
 			closesocket(m_pCallInfo->RSocket);
+			WSACleanup();
+		//	LOG(INFO) << "rtp接收socket已经关闭";
 		}
 		if (m_pCallInfo->USocket != INVALID_SOCKET)
 		{
-			shutdown(m_pCallInfo->USocket, SD_BOTH);
+			//shutdown(m_pCallInfo->USocket, SD_BOTH);
 			closesocket(m_pCallInfo->USocket);
+			WSACleanup();
+			//LOG(INFO) << "udp转发socket已经关闭";
 		}
-		m_pCallInfo->m_bExitThread = FALSE;
-		delete m_pCallInfo;
-		m_pCallInfo = NULL;
+		//m_pCallInfo->m_bExitThread = FALSE;
+	//	delete m_pCallInfo;
+		//m_pCallInfo = NULL;
 	}
 }
 
@@ -84,7 +91,7 @@ void rtp_socket::run()
 
 	m_pCallInfo->m_iRTPPort = m_iPort;
 	m_pCallInfo->m_bExitThread = FALSE;
-	int USocket = InitSendSocket((char *)"127.0.0.1", m_iPort + 30000, m_pCallInfo);
+	int USocket = InitSendSocket((char *)"127.0.0.1", m_iPort + 30000);
 
 	LOG(INFO) << " rtp_socket::run::InitSendSocket, 端口号: " << 30000+m_iPort;
 
@@ -174,10 +181,9 @@ void rtp_socket::run()
 
 void rtp_socket::sMediaReceiverProc()
 {
-	CALL_INFO_ST *pItem = m_pCallInfo;
+	//CALL_INFO_ST *pItem = m_pCallInfo;
 	LONGLONG pts = 0;
 	FILE *fp = NULL;
-	FILE *fpRecord = NULL;
 	int len = 0;
 	DWORD dwFirstTS = -1;
 	DWORD dwFirstTick = 0;
@@ -197,11 +203,11 @@ void rtp_socket::sMediaReceiverProc()
 
 	LOG(INFO) << " rtp_socket::run::sMediaReceiverProc 进入接收数据循环之前";
 
-	while (!pItem->m_bExitThread)
+	while (!m_pCallInfo->m_bExitThread)
 	{
-		prevTime = pItem->m_TS;
+		prevTime = m_pCallInfo->m_TS;
 
-		len = recvfrom(pItem->RSocket, (char *)buf, size, 0, (SOCKADDR*)&addrClient, &sock_addr_size);
+		len = recvfrom(m_pCallInfo->RSocket, (char *)buf, size, 0, (SOCKADDR*)&addrClient, &sock_addr_size);
 		if (len < 0)
 		{
 			break;
@@ -212,28 +218,28 @@ void rtp_socket::sMediaReceiverProc()
 			continue;
 		}
 
-		USHORT port = (pItem->Uaddr).sin_port;
-		char* chIP = inet_ntoa(addrClient.sin_addr);
+		//USHORT port = (pItem->Uaddr).sin_port;
+		//char* chIP = inet_ntoa(addrClient.sin_addr);
 		
 		//LOG(INFO) << " rtp_socket::run::sMediaReceiverProc RTP客户端 IP地址："<<chIP<<" 端口号："<<addrClient.sin_port;
 
-		pItem->m_PT = buf[1] & 0x7F;
-		pItem->m_SN = htons((*(unsigned short *)(buf + 2)));
-		pItem->m_TS = htonl((*(unsigned long *)(buf + 4)));
-		pItem->m_SSRC = htonl((*(unsigned long *)(buf + 8)));
+		m_pCallInfo->m_PT = buf[1] & 0x7F;
+		m_pCallInfo->m_SN = htons((*(unsigned short *)(buf + 2)));
+		m_pCallInfo->m_TS = htonl((*(unsigned long *)(buf + 4)));
+		m_pCallInfo->m_SSRC = htonl((*(unsigned long *)(buf + 8)));
 
 		if (dwFirstTS == -1)
 		{
-			dwFirstTS = pItem->m_TS;
+			dwFirstTS = m_pCallInfo->m_TS;
 		}
 
-		if (pItem->m_CurSSRC == -1)
+		if (m_pCallInfo->m_CurSSRC == -1)
 		{
-			pItem->m_CurSSRC = pItem->m_SSRC;
+			m_pCallInfo->m_CurSSRC = m_pCallInfo->m_SSRC;
 		}
 		PACKET one;
-		one.m_SN = pItem->m_SN;
-		one.m_TS = pItem->m_TS;
+		one.m_SN = m_pCallInfo->m_SN;
+		one.m_TS = m_pCallInfo->m_TS;
 		one.m_len = len - 12;
 		one.m_buf = (char *)malloc(len - 12);
 		memcpy(one.m_buf, buf + 12, len - 12);
@@ -313,13 +319,21 @@ void rtp_socket::sMediaReceiverProc()
 			BOOL found;
 			for (int sn = minSN; sn <= maxSN; sn++)
 			{
+				if (m_pCallInfo->m_bExitThread)
+				{
+					break;
+				}
 				found = FALSE;
 				std::list<PACKET>::iterator it;
 				for (it = PacketArray.begin(); it != PacketArray.end(); it++)
 				{
+					if (m_pCallInfo->m_bExitThread)
+					{
+						break;
+					}
 					if (it->m_SN == sn)
 					{
-						sendto(pItem->USocket, it->m_buf, it->m_len, 0, (SOCKADDR *)&(pItem->Uaddr), sizeof(SOCKADDR));
+						sendto(m_pCallInfo->USocket, it->m_buf, it->m_len, 0, (SOCKADDR *)&(m_pCallInfo->Uaddr), sizeof(SOCKADDR));
 						found = TRUE;
 
 						//LOG(DEBUG) << " rtp_socket::run::sMediaReceiverProc sendBuf长度：" << it->m_len << " SN：" << sn;
@@ -341,13 +355,13 @@ void rtp_socket::sMediaReceiverProc()
 	{
 		fclose(fp);
 	}
-
-	LOG(INFO) << " rtp_socket::run::sMediaReceiverProc 线程退出";
+	//LOG(INFO) << " rtp_socket::run::sMediaReceiverProc 线程退出";
+	//std::this_thread::sleep_for(std::chrono::milliseconds(200));
 }
 
 void rtp_socket::sRTCPProc()
 {
-	CALL_INFO_ST *pItem = m_pCallInfo;
+	//CALL_INFO_ST *pItem = m_pCallInfo;
 	int len;
 	int retryCount = 0;
 	BYTE buf[4096 * 64];
@@ -357,16 +371,19 @@ void rtp_socket::sRTCPProc()
 
 	LOG(INFO) << " rtp_socket::run::sRTCPProc进入接收数据循环之前";
 
-	while (!pItem->m_bExitThread)
+	while (!m_pCallInfo->m_bExitThread)
 	{
 		len = -1;
 		retryCount = 0;
 		for (int i = 0; i < 10; i++)
 		{
-
+			if (m_pCallInfo->m_bExitThread)
+			{
+				break;
+			}
 			//LOG(DEBUG) << " rtp_socket::run::sRTCPProc recvfrom之前";
 
-			len = recvfrom(pItem->CSocket, (char *)buf, size, 0, (SOCKADDR*)&addrClient, &sock_addr_size);
+			len = recvfrom(m_pCallInfo->CSocket, (char *)buf, size, 0, (SOCKADDR*)&addrClient, &sock_addr_size);
 
 			//LOG(DEBUG) << " rtp_socket::run::sRTCPProc recvfrom之后，接收长度：" << len;
 
@@ -379,7 +396,7 @@ void rtp_socket::sRTCPProc()
 
 				if (errorCode != WSAECONNRESET) //忽略掉winsock 的一个bug
 				{
-					std::this_thread::sleep_for(std::chrono::milliseconds(200));
+					//std::this_thread::sleep_for(std::chrono::milliseconds(200));
 				}
 				continue;
 			}
@@ -391,7 +408,7 @@ void rtp_socket::sRTCPProc()
 		if (len < 0)
 		{
 
-			LOG(INFO) << " rtp_socket::run::sRTCPProc 接收出错，已经尝试十次重新接收，线程终止";
+			//LOG(INFO) << " rtp_socket::run::sRTCPProc 接收出错，已经尝试十次重新接收，线程终止";
 
 			break;
 		}
@@ -444,10 +461,11 @@ void rtp_socket::sRTCPProc()
 				//LOG(DEBUG) << " rtp_socket::run::sRTCPProc 端口：" << pItem->m_iRTPPort + 1 << " 发送IP地址：" << chIP << " 发送端口：" << addrClient.sin_port;
 
 				//修复bug，解决RTCP发送Receive回复包通过RTP Socket发送
-				sendto(pItem->CSocket, (char *)send_data, 24, 0, (SOCKADDR *)&addrClient, sock_addr_size);
+				sendto(m_pCallInfo->CSocket, (char *)send_data, 24, 0, (SOCKADDR *)&addrClient, sock_addr_size);
 			}
 			continue;
 		}
 	}
-	LOG(INFO) << " rtp_socket::run::sRTCPProc 端口：" << pItem->m_iRTPPort + 1 << " 线程退出标识：" << m_pCallInfo->m_bExitThread << "接收数据尝试次数：" << retryCount;
+	//std::this_thread::sleep_for(std::chrono::milliseconds(200));
+//	LOG(INFO) << " rtp_socket::run::sRTCPProc 端口：" << pItem->m_iRTPPort + 1 << " 线程退出标识：" << m_pCallInfo->m_bExitThread << "接收数据尝试次数：" << retryCount;
 }

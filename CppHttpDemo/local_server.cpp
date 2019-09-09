@@ -105,18 +105,18 @@ void local_server::gb28181ServerThread()
 					if (je->request->req_uri->host == it->m_strIP)
 					{
 						LOG(INFO) << "EXOSIP_CALL_ANSWERED je->cid£º" << je->cid << " je->did£º" << je->did;
-						it->call_id = je->cid;
-						it->dialog_id = je->did;
 						eXosip_call_build_ack(eCtx, je->did, &ack);
 						eXosip_lock(eCtx);
 						eXosip_call_send_ack(eCtx, je->did, ack);
 						eXosip_unlock(eCtx);
 
 						std::list<camera_info>::iterator ct;
-						for (ct = m_cameraList.begin();ct!=m_cameraList.end();ct++)
+						for (ct = m_cameraList.begin(); ct != m_cameraList.end(); ct++)
 						{
 							if (je->request->req_uri->username == ct->strCamId)
 							{
+								ct->call_id = je->cid;
+								ct->dialog_id = je->did;
 								ct->m_ffmpeg->start();
 								ct->m_rtpSocket->start();
 								break;
