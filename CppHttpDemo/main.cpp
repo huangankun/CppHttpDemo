@@ -33,7 +33,7 @@ bool handle_stop_gb_to_rtmp(std::string url, std::string body, mg_connection *c,
 	std::list<video_server>::iterator vt;
 	std::list<camera_info>::iterator ca;
 	bool isExist = false;
-	for (vt=testServer.m_platformList.begin();vt!=testServer.m_platformList.end();vt++)
+	for (vt = testServer.m_platformList.begin(); vt != testServer.m_platformList.end(); vt++)
 	{
 		if (username == vt->m_strID)
 		{
@@ -143,8 +143,8 @@ bool handle_start_gb_to_rtmp(std::string url, std::string body, mg_connection *c
 
 int main(int argc, char *argv[])
 {
-	LOG(INFO) << "***** 程序启动 *****";
-	LOG(INFO) << "程序配置文件目录：" << xmlConfig::configPath;
+	LOG(INFO) << "***** Program startup *****";
+	LOG(INFO) << "Program configuration file directory：" << xmlConfig::configPath;
 
 	auto http_server = std::shared_ptr<HttpServer>(new HttpServer);
 	http_server->Init();
@@ -154,5 +154,5 @@ int main(int argc, char *argv[])
 	http_server->AddHandler("/startGb2Rtmp", handle_start_gb_to_rtmp);
 	http_server->AddHandler("/stopGb2Rtmp", handle_stop_gb_to_rtmp);
 	http_server->Start();
-	LOG(INFO) << "***** 程序结束 *****";
+	LOG(INFO) << "***** End of program *****";
 }

@@ -26,12 +26,12 @@ const char* xmlConfig::getWorkDir()
 	//也可以将buffer作为输出参数
 	if ((buffer = _getcwd(NULL, 0)) == NULL)
 	{
-		LOG(INFO) << "程序工作目录获取失败" << buffer;
+		LOG(INFO) << "Program working directory failed to get" << buffer;
 		return NULL;
 	}
 	else
 	{
-		LOG(INFO) << "程序工作目录：" << buffer;
+		LOG(INFO) << "Program working directory：" << buffer;
 		return buffer;
 	}
 }
@@ -47,7 +47,7 @@ const char* xmlConfig::getWorkDir()
 //************************************
 int xmlConfig::createXML() 
 {
-	const char* declaration = "<?xml version=\"1.0\" encoding=\"gb2312\"?>";
+	const char* declaration = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 	tinyxml2::XMLDocument doc;
 	doc.Parse(declaration);//会覆盖xml所有内容
 
@@ -55,17 +55,14 @@ int xmlConfig::createXML()
 	//XMLDeclaration* declaration=doc.NewDeclaration();
 	//doc.InsertFirstChild(declaration);
 
-	XMLElement* root = doc.NewElement("配置项");
+	XMLElement* root = doc.NewElement("Configuration");
 	doc.InsertEndChild(root);
 
-	XMLElement* localNode = doc.NewElement("本地服务器");
+	XMLElement* localNode = doc.NewElement("local");
 	root->InsertEndChild(localNode);
 
-	XMLElement* videoNode = doc.NewElement("下级域");
+	XMLElement* videoNode = doc.NewElement("SubRealm");
 	root->InsertEndChild(videoNode);
-
-	XMLElement* nginxNode = doc.NewElement("Nginx服务器");
-	root->InsertEndChild(nginxNode);
 
 	return doc.SaveFile(xmlConfig::configPath.c_str());
 }
@@ -93,11 +90,11 @@ int xmlConfig::insertVideoServerNode(const video_server& video_server)
 	}
 
 	XMLElement* root = doc.RootElement();
-	XMLElement* serversNode = root->FirstChildElement("下级域");
+	XMLElement* serversNode = root->FirstChildElement("SubRealm");
 
-	XMLElement* serverNode = doc.NewElement("下级服务器");
+	XMLElement* serverNode = doc.NewElement("subServer");
 	serverNode->SetAttribute("ID", video_server.m_strID.c_str());
-	serverNode->SetAttribute("域", video_server.m_strRealm.c_str());
+	serverNode->SetAttribute("realm", video_server.m_strRealm.c_str());
 	serversNode->InsertEndChild(serverNode);
 
 	XMLElement* serverIP = doc.NewElement("IP");
@@ -105,37 +102,37 @@ int xmlConfig::insertVideoServerNode(const video_server& video_server)
 	serverIP->InsertEndChild(ipText);
 	serverNode->InsertEndChild(serverIP);
 
-	XMLElement* serverPWD = doc.NewElement("密码");
+	XMLElement* serverPWD = doc.NewElement("password");
 	XMLText* PWDText = doc.NewText(video_server.m_strPassword.c_str());
 	serverPWD->InsertEndChild(PWDText);
 	serverNode->InsertEndChild(serverPWD);
 
 	char intBuf[10];
-	XMLElement* serverPort = doc.NewElement("端口");
+	XMLElement* serverPort = doc.NewElement("port");
 	_itoa(video_server.m_iPort, intBuf, 10);
 	XMLText* portText = doc.NewText(intBuf);
 	serverPort->InsertEndChild(portText);
 	serverNode->InsertEndChild(serverPort);
 
-	XMLElement* serverExpires = doc.NewElement("注册时间");
+	XMLElement* serverExpires = doc.NewElement("expries");
 	_itoa(video_server.m_iExpires, intBuf, 10);
 	XMLText* expiresText = doc.NewText(intBuf);
 	serverExpires->InsertEndChild(expiresText);
 	serverNode->InsertEndChild(serverExpires);
 
-	XMLElement* serverHeartBeat = doc.NewElement("心跳周期");
+	XMLElement* serverHeartBeat = doc.NewElement("HeartbeatCycle");
 	_itoa(video_server.m_iHeartBeat, intBuf, 10);
 	XMLText* heartBeatText = doc.NewText(intBuf);
 	serverHeartBeat->InsertEndChild(heartBeatText);
 	serverNode->InsertEndChild(serverHeartBeat);
 
-	XMLElement* serverKeepAlive = doc.NewElement("保活");
+	XMLElement* serverKeepAlive = doc.NewElement("keepalive");
 	_itoa(video_server.m_bKeepAlive, intBuf, 10);
 	XMLText* keepAliveText = doc.NewText(intBuf);
 	serverKeepAlive->InsertEndChild(keepAliveText);
 	serverNode->InsertEndChild(serverKeepAlive);
 
-	XMLElement* serverKeepAliveInterval = doc.NewElement("保活间隔");
+	XMLElement* serverKeepAliveInterval = doc.NewElement("aliveInterval");
 	_itoa(video_server.m_iKeepAliveInterval, intBuf, 10);
 	XMLText* keepAliveIntervalText = doc.NewText(intBuf);
 	serverKeepAliveInterval->InsertEndChild(keepAliveIntervalText);
@@ -173,19 +170,19 @@ int xmlConfig::insertLocalServerNode(const local_server& local_server)
 	}
 
 	XMLElement* root = doc.RootElement();
-	XMLElement* localNode = root->FirstChildElement("本地服务器");
+	XMLElement* localNode = root->FirstChildElement("local");
 
 	XMLElement* serverID = doc.NewElement("ID");
 	XMLText* IDText = doc.NewText(local_server.m_strID.c_str());
 	serverID->InsertEndChild(IDText);
 	localNode->InsertEndChild(serverID);
 
-	XMLElement* serverRealm = doc.NewElement("域");
+	XMLElement* serverRealm = doc.NewElement("realm");
 	XMLText* realmText = doc.NewText(local_server.m_realm.c_str());
 	serverRealm->InsertEndChild(realmText);
 	localNode->InsertEndChild(serverRealm);
 
-	XMLElement* serverProtocol = doc.NewElement("协议");
+	XMLElement* serverProtocol = doc.NewElement("protocol");
 	XMLText* protocolText = doc.NewText(local_server.m_protocol.c_str());
 	serverProtocol->InsertEndChild(protocolText);
 	localNode->InsertEndChild(serverProtocol);
@@ -197,18 +194,18 @@ int xmlConfig::insertLocalServerNode(const local_server& local_server)
 	localNode->InsertEndChild(serverIP);
 
 	char intBuf[10];
-	XMLElement* serverPort = doc.NewElement("端口");
+	XMLElement* serverPort = doc.NewElement("port");
 	_itoa(local_server.m_port, intBuf, 10);
 	XMLText* portText = doc.NewText(intBuf);
 	serverPort->InsertEndChild(portText);
 	localNode->InsertEndChild(serverPort);
 
-	XMLElement* serverPWD = doc.NewElement("密码");
+	XMLElement* serverPWD = doc.NewElement("password");
 	XMLText* PWDText = doc.NewText(local_server.m_password.c_str());
 	serverPWD->InsertEndChild(PWDText);
 	localNode->InsertEndChild(serverPWD);
 
-	XMLElement* serverAuth = doc.NewElement("鉴权");
+	XMLElement* serverAuth = doc.NewElement("Authentication");
 	_itoa(local_server.m_bAuthentication, intBuf, 10);
 	XMLText* authText = doc.NewText(intBuf);
 	serverAuth->InsertEndChild(authText);
@@ -230,7 +227,7 @@ int xmlConfig::insertLocalServerNode(const local_server& local_server)
 XMLElement* xmlConfig::queryVideoServerNodeByName(XMLElement* root, const std::string& serverID)
 {
 
-	XMLElement* userNode = root->FirstChildElement("下级域");
+	XMLElement* userNode = root->FirstChildElement("SubRealm");
 	while (userNode != NULL)
 	{
 		if (userNode->Attribute("ID") == serverID)
@@ -263,30 +260,30 @@ void xmlConfig::readLocalServerNode(local_server &local_server)
 	}
 
 	XMLElement* root = doc.RootElement();
-	XMLElement* localNode = root->FirstChildElement("本地服务器");
+	XMLElement* localNode = root->FirstChildElement("local");
 
 	XMLElement* idNode = localNode->FirstChildElement("ID");
 	local_server.m_strID = idNode->GetText();
 
-	XMLElement* realmNode = localNode->FirstChildElement("域");
+	XMLElement* realmNode = localNode->FirstChildElement("realm");
 	local_server.m_realm = realmNode->GetText();
 
-	XMLElement* protocolNode = localNode->FirstChildElement("协议");
+	XMLElement* protocolNode = localNode->FirstChildElement("protocol");
 	local_server.m_protocol = protocolNode->GetText();
 
 	XMLElement* ipNode = localNode->FirstChildElement("IP");
 	local_server.m_ip = ipNode->GetText();
 
-	XMLElement* portNode = localNode->FirstChildElement("端口");
+	XMLElement* portNode = localNode->FirstChildElement("port");
 	local_server.m_port = atoi(portNode->GetText());
 
-	XMLElement* pwdNode = localNode->FirstChildElement("密码");
+	XMLElement* pwdNode = localNode->FirstChildElement("password");
 	local_server.m_password = pwdNode->GetText();
 
-	XMLElement* authNode = localNode->FirstChildElement("鉴权");
+	XMLElement* authNode = localNode->FirstChildElement("Authentication");
 	local_server.m_bAuthentication = atoi(authNode->GetText());
 
-	XMLElement* videoNumNode = localNode->FirstChildElement("视频路数");
+	XMLElement* videoNumNode = localNode->FirstChildElement("videoNum");
 	local_server.m_videoNum = atoi(videoNumNode->GetText());
 }
 
@@ -312,12 +309,12 @@ void xmlConfig::readHttpServerNode(HttpServer & http_server)
 	}
 
 	XMLElement* root = doc.RootElement();
-	XMLElement* httpNode = root->FirstChildElement("HTTP服务器");
+	XMLElement* httpNode = root->FirstChildElement("http");
 
 	XMLElement* ipNode = httpNode->FirstChildElement("IP");
 	http_server.m_ip = ipNode->GetText();
 
-	XMLElement* portNode = httpNode->FirstChildElement("端口");
+	XMLElement* portNode = httpNode->FirstChildElement("port");
 	http_server.m_port = portNode->GetText();
 }
 
@@ -434,33 +431,33 @@ void xmlConfig::readVideoServerNodes(local_server & local_server)
 	}
 
 	XMLElement* root = doc.RootElement();
-	XMLElement* videoNodes = root->FirstChildElement("下级域");
-	XMLElement* videoNode = videoNodes->FirstChildElement("下级服务器");
+	XMLElement* videoNodes = root->FirstChildElement("SubRealm");
+	XMLElement* videoNode = videoNodes->FirstChildElement("subServer");
 	while (videoNode != nullptr)
 	{
 		video_server newNode;
 		newNode.m_strID = videoNode->Attribute("ID");
-		newNode.m_strRealm = videoNode->Attribute("域");
+		newNode.m_strRealm = videoNode->Attribute("realm");
 
 		XMLElement* ipNode = videoNode->FirstChildElement("IP");
 		newNode.m_strIP = ipNode->GetText();
 
-		XMLElement* pwdNode = videoNode->FirstChildElement("密码");
+		XMLElement* pwdNode = videoNode->FirstChildElement("password");
 		newNode.m_strPassword = pwdNode->GetText();
 
-		XMLElement* portNode = videoNode->FirstChildElement("端口");
+		XMLElement* portNode = videoNode->FirstChildElement("port");
 		newNode.m_iPort = atoi(portNode->GetText());
 
-		XMLElement* expiresNode = videoNode->FirstChildElement("注册时间");
+		XMLElement* expiresNode = videoNode->FirstChildElement("expries");
 		newNode.m_iExpires = atoi(expiresNode->GetText());
 
-		XMLElement* beatNode = videoNode->FirstChildElement("心跳周期");
+		XMLElement* beatNode = videoNode->FirstChildElement("HeartbeatCycle");
 		newNode.m_iHeartBeat = atoi(beatNode->GetText());
 
-		XMLElement* aliveNode = videoNode->FirstChildElement("保活");
+		XMLElement* aliveNode = videoNode->FirstChildElement("keepalive");
 		newNode.m_bKeepAlive = atoi(aliveNode->GetText());
 
-		XMLElement* intervalNode = videoNode->FirstChildElement("保活间隔");
+		XMLElement* intervalNode = videoNode->FirstChildElement("aliveInterval");
 		newNode.m_iKeepAliveInterval = atoi(intervalNode->GetText());
 
 		XMLElement* rtcpNode = videoNode->FirstChildElement("RTCP");

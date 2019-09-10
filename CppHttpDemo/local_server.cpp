@@ -11,7 +11,24 @@ local_server::local_server()
 
 local_server::~local_server()
 {
-
+	if (m_cameraList.size() != 0)
+	{
+		std::list<camera_info>::iterator ca;
+		for (ca = m_cameraList.begin(); ca != m_cameraList.end(); ca++)
+		{
+			this->sendBye(ca->call_id, ca->dialog_id);
+			this->m_cameraList.erase(ca);
+		}
+	}
+	std::list<video_server>::iterator va;
+	for (va = m_platformList.begin(); va != m_platformList.end(); va++)
+	{
+		if (va->isRegister == 1)
+		{
+			this->sendBye(va->call_id, va->dialog_id);
+		}
+		m_platformList.erase(va);
+	}
 }
 
 void local_server::gb28181ServerThread()
@@ -43,6 +60,8 @@ void local_server::gb28181ServerThread()
 						if (MSG_IS_REGISTER(je->request))
 						{
 							it->isRegister = 1;
+							it->call_id = je->cid;
+							it->dialog_id = je->did;
 						}
 						else if (MSG_IS_MESSAGE(je->request))
 						{
@@ -70,13 +89,13 @@ void local_server::gb28181ServerThread()
 								if (idx != std::string::npos)
 								{
 									it->xmlCatalog = bodyStr;
-									LOG(INFO) << "获取设备目录信息成功，下级域ID：" << it->m_strID;
+									LOG(INFO) << "Obtain the device directory information successfully, lower domain ID：" << it->m_strID;
 								}
 							}
 							else
 							{
 								//log 获取body失败
-								LOG(INFO) << "获取设备目录信息BODY失败，下级域ID：" << it->m_strID;
+								LOG(INFO) << "Failed to get device directory information BODY, subordinate domain ID：" << it->m_strID;
 							}
 						}
 						else if (strncmp(je->request->sip_method, "BYE", 4) != 0)
@@ -162,16 +181,16 @@ int local_server::eXosipInit()
 	eCtx = eXosip_malloc();
 	if (iRet != OSIP_SUCCESS)
 	{
-		LOG(INFO) << "local_server::eXosipInit 失败，错误码：" << iRet;
+		LOG(INFO) << "local_server::eXosipInit failed，return code：" << iRet;
 		return iRet;
 	}
 	else
 	{
-		LOG(INFO) << "local_server::eXosipInit eXosip_malloc成功";
+		LOG(INFO) << "local_server::eXosipInit eXosip_malloc succeeded";
 		iRet = eXosip_init(eCtx);
 		if (iRet != 0)
 		{
-			LOG(INFO) << "local_server::eXosipInit eXosip_init失败";
+			LOG(INFO) << "local_server::eXosipInit eXosip_init failed";
 			return iRet;
 		}
 	}
@@ -181,10 +200,10 @@ int local_server::eXosipInit()
 	iRet = eXosip_listen_addr(eCtx, IPPROTO_UDP, NULL, m_port, AF_INET, 0);
 	if (iRet != OSIP_SUCCESS)
 	{
-		LOG(INFO) << "local_server::eXosipInit eXosip_listen_addr失败，端口：" << m_port;
+		LOG(INFO) << "local_server::eXosipInit eXosip_listen_addr failed，port：" << m_port;
 		return iRet;
 	}
-	LOG(INFO) << "local_server::eXosipInit eXosip_listen_addr成功，端口：" << m_port;
+	LOG(INFO) << "local_server::eXosipInit eXosip_listen_addr succeeded，port：" << m_port;
 	//sendInvite("34000000001317006215", 6000);
 }
 
@@ -208,12 +227,12 @@ int local_server::sendInvite(const char* cameraId, const char* platformIP, int p
 	snprintf(srcCall, 256, "sip:%s@%s", m_strID.c_str(), m_ip.c_str());
 	snprintf(sub, 128, cameraId, m_strID.c_str());
 
-	LOG(INFO) << "local_server::sendInvite，设备ID：" << cameraId;
+	LOG(INFO) << "local_server::sendInvite，device ID：" << cameraId;
 
 	iRet = eXosip_call_build_initial_invite(eCtx, &invite, destCall, srcCall, NULL, sub);
 	if (iRet != OSIP_SUCCESS)
 	{
-		LOG(INFO) << "local_server::sendInvite::eXosip_call_build_initial_invite失败，错误码：" << iRet;
+		LOG(INFO) << "local_server::sendInvite::eXosip_call_build_initial_invite failed，return code：" << iRet;
 
 		return iRet;
 	}
@@ -237,7 +256,7 @@ int local_server::sendInvite(const char* cameraId, const char* platformIP, int p
 	iRet = eXosip_call_send_initial_invite(eCtx, invite);
 	eXosip_unlock(eCtx);
 
-	LOG(INFO) << "local_server::sendInvite成功，返回码：" << iRet;
+	LOG(INFO) << "local_server::sendInvite succeeded，return code：" << iRet;
 	return iRet;
 }
 
@@ -253,7 +272,7 @@ int local_server::sendQueryCatalog(const char* platformID, int sn, const char* p
 {
 	std::string bufQuery = xmlConfig::buildQueryCmdXml(platformID, sn);
 
-	LOG(INFO) << "local_server::sendQueryCatalog，平台ID：" << platformID;
+	LOG(INFO) << "local_server::sendQueryCatalog，platform ID：" << platformID;
 
 	int iRet = 0;
 	char destCall[256], srcCall[256];
@@ -269,11 +288,11 @@ int local_server::sendQueryCatalog(const char* platformID, int sn, const char* p
 		eXosip_message_send_request(eCtx, queryCatalog);
 		eXosip_unlock(eCtx);
 
-		LOG(INFO) << "local_server::sendQueryCatalog成功，返回码：" << iRet;
+		LOG(INFO) << "local_server::sendQueryCatalog succeeded，return code：" << iRet;
 	}
 	else
 	{
-		LOG(INFO) << "local_server::sendQueryCatalog失败，返回码：" << iRet;
+		LOG(INFO) << "local_server::sendQueryCatalog succeeded，return code：" << iRet;
 	}
 	return iRet;
 }
@@ -282,7 +301,7 @@ int local_server::sendPTZCMD(const char* deviceID, const int sn, const char* ptz
 {
 	std::string bufPTZ = xmlConfig::builPTZControlXml(deviceID, sn, ptzCode);
 
-	LOG(INFO) << "local_server::sendPTZCMD，设备ID：" << deviceID;
+	LOG(INFO) << "local_server::sendPTZCMD，device ID：" << deviceID;
 
 	int iRet = 0;
 	char destCall[256], srcCall[256];
@@ -298,11 +317,11 @@ int local_server::sendPTZCMD(const char* deviceID, const int sn, const char* ptz
 		eXosip_message_send_request(eCtx, queryPTZ);
 		eXosip_unlock(eCtx);
 
-		LOG(INFO) << "local_server::sendPTZCMD成功，返回码：" << iRet;
+		LOG(INFO) << "local_server::sendPTZCMD succeeded，return code：" << iRet;
 	}
 	else
 	{
-		LOG(INFO) << "local_server::sendPTZCMD失败，返回码：" << iRet;
+		LOG(INFO) << "local_server::sendPTZCMD succeeded，return code：" << iRet;
 	}
 	return iRet;
 }
@@ -311,7 +330,7 @@ int local_server::sendPlayBack(const char* cameraId, const char* platformIP, int
 {
 	char destCall[256], srcCall[256], sub[128];
 
-	LOG(INFO) << "local_server::sendPlayBack，设备ID：" << cameraId;
+	LOG(INFO) << "local_server::sendPlayBack，device ID：" << cameraId;
 
 	osip_message_t *invite = NULL;
 	int iRet;
@@ -323,8 +342,7 @@ int local_server::sendPlayBack(const char* cameraId, const char* platformIP, int
 	iRet = eXosip_call_build_initial_invite(eCtx, &invite, destCall, srcCall, NULL, sub);
 	if (iRet != OSIP_SUCCESS)
 	{
-		//log 创建请求失败
-		LOG(INFO) << "local_server::sendPlayBack::eXosip_call_build_initial_invite失败，返回码：" << iRet;
+		LOG(INFO) << "local_server::sendPlayBack::eXosip_call_build_initial_invite failed，return code：" << iRet;
 		return iRet;
 	}
 	char body[2048];
@@ -346,7 +364,7 @@ int local_server::sendPlayBack(const char* cameraId, const char* platformIP, int
 	iRet = eXosip_call_send_initial_invite(eCtx, invite);
 	eXosip_unlock(eCtx);
 
-	LOG(INFO) << "local_server::sendPlayBack成功，返回码：" << iRet;
+	LOG(INFO) << "local_server::sendPlayBack succeeded，return code：" << iRet;
 
 	return iRet;
 }
@@ -410,7 +428,7 @@ void local_server::start()
 {
 	m_bIsStop = false;
 
-	LOG(INFO) << "local_server::start 线程开始运行...";
+	LOG(INFO) << "local_server::start thread start...";
 
 	std::thread([&](local_server *pointer)
 	{
@@ -424,9 +442,9 @@ void local_server::stop()
 {
 	m_bIsStop = true;
 
-	LOG(INFO) << "local_server::stop 线程停止";
+	LOG(INFO) << "local_server::stop thread stop";
 
-	while (m_bIsThreadRunning)
+	while (m_bIsStop)
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}

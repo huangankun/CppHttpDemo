@@ -93,7 +93,7 @@ void rtp_socket::run()
 	m_pCallInfo->m_bExitThread = FALSE;
 	int USocket = InitSendSocket((char *)"127.0.0.1", m_iPort + 30000);
 
-	LOG(INFO) << " rtp_socket::run::InitSendSocket, 端口号: " << 30000+m_iPort;
+	LOG(INFO) << " rtp_socket::run::InitSendSocket, port: " << 30000+m_iPort;
 
 	if (0 >= USocket) {
 		delete m_pCallInfo;
@@ -114,7 +114,7 @@ void rtp_socket::run()
 	{
 		closesocket(RSocket);
 		//OutputDebugPrintf("bind %d error", port);
-		LOG(INFO) << " rtp_socket::run::bind失败, 端口号: " <<m_iPort;
+		LOG(INFO) << " rtp_socket::run::bind fail, port: " <<m_iPort;
 		return;
 	}
 
@@ -122,7 +122,7 @@ void rtp_socket::run()
 	BOOL bNewBehavior = FALSE;
 	DWORD status;
 
-	LOG(INFO) << " rtp_socket::run::bind成功, 端口号: " << m_iPort;
+	LOG(INFO) << " rtp_socket::run::bind succeed, port: " << m_iPort;
 
 	int recv_buf_size = 10 * 1024 * 1024;
 	::setsockopt(RSocket, SOL_SOCKET, SO_RCVBUF, (char*)&recv_buf_size, sizeof(int));
@@ -133,7 +133,7 @@ void rtp_socket::run()
 	if (CSocket == INVALID_SOCKET)
 	{
 
-		LOG(INFO) << " rtp_socket::run::socket RTCP申请socket失败 ";
+		LOG(INFO) << " rtp_socket::run::socket RTCP get socket fail ";
 
 		closesocket(RSocket);
 		return;
@@ -145,7 +145,7 @@ void rtp_socket::run()
 	if (bind(CSocket, (SOCKADDR*)&(m_pCallInfo->Caddr), sizeof(SOCKADDR)) < 0)
 	{
 
-		LOG(INFO) << " rtp_socket::run::bind RTCP绑定端口： " << m_iPort + 1 << "失败";
+		LOG(INFO) << " rtp_socket::run::bind RTCP port： " << m_iPort + 1 << " fail";
 
 		closesocket(RSocket);
 		closesocket(CSocket);
@@ -156,12 +156,12 @@ void rtp_socket::run()
 	m_pCallInfo->RSocket = RSocket;
 	m_pCallInfo->CSocket = CSocket;
 
-	LOG(INFO) << " rtp_socket::run::bind RTCP绑定端口： " << m_iPort + 1 << "成功";
+	LOG(INFO) << " rtp_socket::run::bind RTCP port： " << m_iPort + 1 << " succeed";
 
 	if (CSocket)
 	{
 
-		LOG(INFO) << " rtp_socket::run::sRTCPProc RTCP接收线程启动";
+		LOG(INFO) << " rtp_socket::run::sRTCPProc RTCP thread start ";
 
 		std::thread([&](rtp_socket *pointer)
 		{
@@ -172,7 +172,7 @@ void rtp_socket::run()
 
 	std::thread([&](rtp_socket *pointer)
 	{
-		LOG(INFO) << " rtp_socket::run::sMediaReceiverProc 视频流接收线程启动";
+		LOG(INFO) << " rtp_socket::run::sMediaReceiverProc thread start ";
 
 		pointer->sMediaReceiverProc();
 
@@ -201,7 +201,7 @@ void rtp_socket::sMediaReceiverProc()
 	long num = 0;
 	long prevTime = 0;
 
-	LOG(INFO) << " rtp_socket::run::sMediaReceiverProc 进入接收数据循环之前";
+	LOG(INFO) << " rtp_socket::run::sMediaReceiverProc before while";
 
 	while (!m_pCallInfo->m_bExitThread)
 	{
@@ -254,7 +254,7 @@ void rtp_socket::sMediaReceiverProc()
 				if (0 != _access(fileName.c_str(), 0))
 					if (0 != _mkdir(fileName.c_str()))
 					{
-						LOG(INFO) << "创建文件夹失败，文件夹路径：" << fileName; 				  // 返回 0 表示创建成功，-1 表示失败
+						LOG(INFO) << "Failed to create folder, folder path: " << fileName; 				  // 返回 0 表示创建成功，-1 表示失败
 						return;
 					}
 				fileName = fileName + "\\" + xmlConfig::getCurrentTime() + ".ps";
@@ -369,7 +369,7 @@ void rtp_socket::sRTCPProc()
 	SOCKADDR_IN addrClient;
 	int sock_addr_size = sizeof(SOCKADDR_IN);
 
-	LOG(INFO) << " rtp_socket::run::sRTCPProc进入接收数据循环之前";
+	LOG(INFO) << " rtp_socket::run::sRTCPProc before while ";
 
 	while (!m_pCallInfo->m_bExitThread)
 	{

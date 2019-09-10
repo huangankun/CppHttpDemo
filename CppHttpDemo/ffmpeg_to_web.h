@@ -18,15 +18,16 @@ public:
 
 	std::string m_strFileName;	//input stream url or file
 	std::string m_strUrl;				//out put stream url
-	std::string m_fileExt;	//转码格式后缀 .flv .hls
+	std::string m_fileExt;	//Transcode format suffix .flv .hls
 
-	bool m_bSaveJPEG;		//是否保存图片
-	int m_iPort;	//接收端口
-	int videoStream;	//视频流下标
+	bool m_bSaveJPEG;
+	int m_iPort;
+	int videoStream;	//Video stream index
 
 	bool m_bIsRunning;	//thread flag
 	AVFormatContext* outputContext;
 	AVFormatContext* context;
+	//AVCodecContext* pAVCodecContext;
 
 	//************************************
 	// Method:    start
@@ -105,9 +106,9 @@ public:
 	// FullName:  ffmpeg_to_web::writeJPEG
 	// Access:    public 
 	// Returns:   void
-	// Qualifier:	写入JPEG信息
-	// Parameter: AVFrame * pFrame 帧数据
-	// Parameter: int width	图片
+	// Qualifier:	Write JPEG information
+	// Parameter: AVFrame * pFrame
+	// Parameter: int width
 	// Parameter: int height
 	// Parameter: int iIndex
 	//************************************
@@ -118,7 +119,7 @@ public:
 	// FullName:  ffmpeg_to_web::ffmpegClose
 	// Access:    public 
 	// Returns:   void
-	// Qualifier:	销毁ffmpeg相关变量
+	// Qualifier:	Destroy ffmpeg related variables
 	//************************************
 	void ffmpegClose();
 
@@ -128,7 +129,7 @@ public:
 	// FullName:  ffmpeg_to_web::interruptReadFrame
 	// Access:    public 
 	// Returns:   int
-	// Qualifier:	线程需要退出时打断持续读取视频帧
+	// Qualifier:	Threads need to interrupt when interrupting to continuously read video frames
 	// Parameter: void* ctx
 	//************************************
 	static int interruptReadFrame(void* ctx);

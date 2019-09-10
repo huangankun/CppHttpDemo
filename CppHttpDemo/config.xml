@@ -1,40 +1,39 @@
-<?xml version="1.0" encoding="gb2312" standalone="no"?>
-<配置项>
-	<HTTP服务器>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Configuration>
+	<http>
 		<IP>127.0.0.1</IP>
-		<端口>7999</端口>
-	</HTTP服务器>
-    <本地服务器>
+		<port>7999</port>
+	</http>
+    <local>
         <ID>34020000002000000001</ID>
-        <域>34020000</域>
-        <协议>UDP</协议>
+        <realm>34020000</realm>
+        <protocol>UDP</protocol>
         <IP>27.17.34.22</IP>
-        <端口>5060</端口>
-        <密码>123456</密码>
-        <鉴权>1</鉴权>
-		<视频路数>4</视频路数>
-    </本地服务器>
-    <下级域>
-        <下级服务器 ID="35080000002000000128" 域="35080000">
+        <port>5060</port>
+        <password>123456</password>
+        <Authentication>1</Authentication>
+		<videoNum>4</videoNum>
+    </local>
+    <SubRealm>
+        <subServer ID="35080000002000000128" realm="35080000">
             <IP>112.111.229.121</IP>
-            <密码>123456</密码>
-            <端口>7100</端口>
-            <注册时间>3600</注册时间>
-            <心跳周期>30</心跳周期>
-            <保活>1</保活>
-            <保活间隔>30000</保活间隔>
+            <password>123456</password>
+            <port>7100</port>
+            <expries>3600</expries>
+            <HeartbeatCycle>30</HeartbeatCycle>
+            <keepalive>1</keepalive>
+            <aliveInterval>30000</aliveInterval>
             <RTCP>1</RTCP>
-        </下级服务器>
-		<下级服务器 ID="36080000002000000129" 域="36080000">
-            <IP>112.111.229.121</IP>
-            <密码>123456</密码>
-            <端口>7100</端口>
-            <注册时间>3600</注册时间>
-            <心跳周期>30</心跳周期>
-            <保活>1</保活>
-            <保活间隔>30000</保活间隔>
+        </subServer>
+		<subServer ID="34000000002000001111" realm="34000000">
+            <IP>117.71.25.9</IP>
+            <password>123456</password>
+            <port>7100</port>
+            <expries>3600</expries>
+            <HeartbeatCycle>30</HeartbeatCycle>
+            <keepalive>1</keepalive>
+            <aliveInterval>30000</aliveInterval>
             <RTCP>1</RTCP>
-        </下级服务器>
-    </下级域>
-    <Nginx服务器/>
-</配置项>
+        </subServer>
+    </SubRealm>
+</Configuration>

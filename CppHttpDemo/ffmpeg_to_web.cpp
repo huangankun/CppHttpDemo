@@ -16,7 +16,7 @@ ffmpeg_to_web::~ffmpeg_to_web()
 
 void ffmpeg_to_web::start()
 {
-	LOG(INFO) << " ffmpeg_to_web::mainThread 主线程开始";
+	LOG(INFO) << " ffmpeg_to_web::mainThread start ";
 
 	std::thread([&](ffmpeg_to_web *pointer)
 	{
@@ -32,7 +32,7 @@ void ffmpeg_to_web::stop()
 
 void ffmpeg_to_web::ffmpegInit()
 {
-	LOG(INFO) << " ffmpeg_to_web::ffmpegInit 初始化";
+	LOG(INFO) << " ffmpeg_to_web::ffmpegInit initialization ";
 
 	av_register_all();
 	avfilter_register_all();
@@ -42,7 +42,7 @@ void ffmpeg_to_web::ffmpegInit()
 
 int ffmpeg_to_web::openInputStream()
 {
-	LOG(INFO) << " ffmpeg_to_web::openInputStream 打开输入流，查找最佳流";
+	LOG(INFO) << " ffmpeg_to_web::openInputStream Open the input stream to find the best stream";
 
 	context = avformat_alloc_context();
 	context->interrupt_callback.callback = interruptReadFrame;
@@ -53,8 +53,9 @@ int ffmpeg_to_web::openInputStream()
 	AVDictionary* format_opts = NULL;
 
 	int ret = 0;
-	//av_dict_set(&dicts, "protocol_whitelist", "file,udp", 0);
-	av_dict_set(&dicts, "timeout", "10000", 0);
+	//av_dict_set(&dicts, "c:v", "h264_cuvid", 0);
+	//av_dict_set(&dicts, "hwaccel", "cuvid", 0);
+	//av_dict_set(&dicts, "timeout", "10000", 0);
 	//av_dict_set(&dicts, "rtbufsize", "655360", 0);
 	//av_dict_set(&dicts, "bufsize", "655360", 0);
 
@@ -63,22 +64,42 @@ int ffmpeg_to_web::openInputStream()
 	{
 		char errStr[256];
 		av_strerror(ret, errStr, 256);
-		LOG(INFO) << " ffmpeg_to_web::openInputStream avformat_open_input失败，错误：" << errStr;
+		LOG(INFO) << " ffmpeg_to_web::openInputStream avformat_open_input failed，return code：" << errStr;
 		return ret;
 	}
 
-	LOG(INFO) << " ffmpeg_to_web::openInputStream avformat_find_stream_info 打开输入流成功，查找最佳流";
+	LOG(INFO) << " ffmpeg_to_web::openInputStream avformat_find_stream_info Open the input stream successfully, find the best stream";
 
 	ret = avformat_find_stream_info(context, nullptr);
 	if (ret < 0)
 	{
 		char errStr[256];
 		av_strerror(ret, errStr, 256);
-		LOG(INFO) << " ffmpeg_to_web::openInputStream avformat_find_stream_info失败，错误：" << errStr;
+		LOG(INFO) << " ffmpeg_to_web::openInputStream avformat_find_stream_info failed，return code：" << errStr;
 		return ret;
 	}
 
-	LOG(INFO) << " ffmpeg_to_web::openInputStream avformat_find_stream_info成功，已找到最佳流，等待打开输出流...";
+	//AVCodec *pAVCodec;
+	//pAVCodec = avcodec_find_decoder_by_name("h264_cuvid"); //查找n卡解码器
+	//if (!pAVCodec) {
+	//	LOG(INFO) << "find h264_cuvid failed";
+	//	return -1;
+	//}
+
+	//pAVCodecContext = context->streams[0]->codec;
+
+	//ret = avcodec_open2(pAVCodecContext, pAVCodec, nullptr);
+	//if (ret < 0)
+	//{
+	//	char errStr[256];
+	//	av_strerror(ret, errStr, 256);
+
+	//	LOG(INFO) << " ffmpeg_to_web::openOutputStream avformat_write_header Write to output header failed， return code：" << errStr;
+
+	//	return ret;
+	//}
+
+	LOG(INFO) << " ffmpeg_to_web::openInputStream avformat_find_stream_info Success, the best stream has been found, waiting to open the output stream...";
 
 	//av_dump_format(context, 0, m_strFileName.c_str(), 0);
 
@@ -87,7 +108,7 @@ int ffmpeg_to_web::openInputStream()
 
 int ffmpeg_to_web::openOutputStream()
 {
-	LOG(INFO) << " ffmpeg_to_web::openOutputStream 打开输出流，分配初始化";
+	LOG(INFO) << " ffmpeg_to_web::openOutputStream Open the output stream, assign initialization";
 
 	int ret = 0;
 	ret = avformat_alloc_output_context2(&outputContext, nullptr, m_fileExt.c_str(), m_strUrl.c_str());
@@ -95,11 +116,11 @@ int ffmpeg_to_web::openOutputStream()
 	{
 		char errStr[256];
 		av_strerror(ret, errStr, 256);
-		LOG(INFO) << " ffmpeg_to_web::openOutputStream avformat_alloc_output_context2分配初始化失败，错误：" << errStr;
+		LOG(INFO) << " ffmpeg_to_web::openOutputStream avformat_alloc_output_context2 Allocation initialization failed, return code：" << errStr;
 		return ret;
 	}
 	
-	LOG(INFO) << " ffmpeg_to_web::openOutputStream avio_open2初始化，avformat_alloc_output_context2分配初始化成功";
+	LOG(INFO) << " ffmpeg_to_web::openOutputStream avio_open2 initialization，avformat_alloc_output_context2 Allocation initialization succeeded";
 
 	ret = avio_open2(&outputContext->pb, m_strUrl.c_str(), AVIO_FLAG_READ_WRITE, nullptr, nullptr);
 	if (ret < 0)
@@ -107,12 +128,12 @@ int ffmpeg_to_web::openOutputStream()
 		char errStr[256];
 		av_strerror(ret, errStr, 256);
 
-		LOG(INFO) << " ffmpeg_to_web::openOutputStream avio_open2初始化失败，错误：" << errStr;
+		LOG(INFO) << " ffmpeg_to_web::openOutputStream avio_open2 initialization failed， return code：" << errStr;
 
 		return ret;
 	}
 
-	LOG(INFO) << " ffmpeg_to_web::openOutputStream avio_open2初始化成功，avcodec_copy_context开始进行解码器复制...";
+	LOG(INFO) << " ffmpeg_to_web::openOutputStream avio_open2 initialization succeeded，avcodec_copy_context Start decoder replication...";
 
 	for (int i = 0; i < context->nb_streams; i++)
 	{
@@ -127,13 +148,13 @@ int ffmpeg_to_web::openOutputStream()
 			char errStr[256];
 			av_strerror(ret, errStr, 256);
 
-			LOG(INFO) << " ffmpeg_to_web::openOutputStream avcodec_copy_context 解码器复制失败，错误：" << errStr;
+			LOG(INFO) << " ffmpeg_to_web::openOutputStream avcodec_copy_context decoder replication failed， return code：" << errStr;
 
 			return ret;
 		}
 	}
 
-	LOG(INFO) << " ffmpeg_to_web::openOutputStream，解码器复制完成，avformat_write_header开始写输出头...";
+	LOG(INFO) << " ffmpeg_to_web::openOutputStream，Decoder copy completed，avformat_write_header, Start writing the output header...";
 
 	ret = avformat_write_header(outputContext, nullptr);
 	if (ret < 0)
@@ -141,14 +162,15 @@ int ffmpeg_to_web::openOutputStream()
 		char errStr[256];
 		av_strerror(ret, errStr, 256);
 
-		LOG(INFO) << " ffmpeg_to_web::openOutputStream avformat_write_header 写入输出头失败，错误：" << errStr;
+		LOG(INFO) << " ffmpeg_to_web::openOutputStream avformat_write_header Write to output header failed， return code：" << errStr;
 
 		return ret;
 	}
 
+
 	//av_dump_format(outputContext, 0, m_strUrl.c_str(), 0);
 
-	LOG(INFO) << " ffmpeg_to_web::openInputStream avformat_write_header成功，正在准备发送流数据到服务器...";
+	LOG(INFO) << " ffmpeg_to_web::openInputStream avformat_write_header succeeded，Sending packet to the server...";
 
 	return ret;
 }
@@ -213,7 +235,7 @@ void ffmpeg_to_web::mainThread()
 
 	if (openInputStream() < 0)
 	{
-		LOG(INFO) << " ffmpeg_to_web::openInputStream failed, 直到找到最佳输入流";
+		LOG(INFO) << " ffmpeg_to_web::openInputStream failed, Until find the best input stream";
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
@@ -232,7 +254,7 @@ void ffmpeg_to_web::mainThread()
 
 	if (openOutputStream() < 0)
 	{
-		LOG(INFO) << " ffmpeg_to_web::openOutputStream failed, 直到找到最佳输入流";
+		LOG(INFO) << " ffmpeg_to_web::openOutputStream failed, Until find the best output stream";
 
 		while (m_bIsRunning)
 		{
@@ -278,31 +300,31 @@ void ffmpeg_to_web::writeJPEG(AVFrame * pFrame, int width, int height)
 	if (0 != _access(fileName.c_str(), 0))
 		if (0 != _mkdir(fileName.c_str()))
 		{
-			LOG(INFO) << "创建文件夹失败，文件夹路径：" << fileName; 				  // 返回 0 表示创建成功，-1 表示失败
+			LOG(INFO) << "Failed to create folder, folder path：" << fileName; 				  // 返回 0 表示创建成功，-1 表示失败
 			return;
 		}
 	fileName = fileName + "\\" + xmlConfig::getCurrentTime() + ".jpg";
 
-	// 分配AVFormatContext对象
+	// Assign an AVFormatContext object
 	AVFormatContext* pFormatCtx = avformat_alloc_context();
 
-	// 设置输出文件格式
+	// Set the output file format
 	pFormatCtx->oformat = av_guess_format("mjpeg", NULL, NULL);
-	// 创建并初始化一个和该url相关的AVIOContext
+	// Create and initialize an AVIOContext associated with the url
 	if (avio_open(&pFormatCtx->pb, fileName.c_str(), AVIO_FLAG_READ_WRITE) < 0) 
 	{
-		LOG(INFO) << "打开图片路径失败，图片路径" << fileName;
+		LOG(INFO) << "Open image path failed, image path" << fileName;
 	}
 
-	// 构建一个新stream
+	// Build a new stream
 	AVStream* pAVStream = avformat_new_stream(pFormatCtx, 0);
 	if (pAVStream == NULL) 
 	{
-		LOG(INFO) << "创建图片输出流失败";
+		LOG(INFO) << "Failed to create image output stream";
 		return;
 	}
 
-	// 设置该stream的信息
+	// Set the information of the stream
 	AVCodecContext* pCodecCtx = pAVStream->codec;
 
 	pCodecCtx->codec_id = pFormatCtx->oformat->video_codec;
@@ -317,14 +339,14 @@ void ffmpeg_to_web::writeJPEG(AVFrame * pFrame, int width, int height)
 	av_dump_format(pFormatCtx, 0, fileName.c_str(), 1);
 	// End Output some information
 
-	// 查找解码器
+	// Find decoder
 	AVCodec* pCodec = avcodec_find_encoder(pCodecCtx->codec_id);
 	if (!pCodec) {
-		LOG(INFO) << "查找JPEG图片解码器失败，图片路径"<< fileName;
+		LOG(INFO) << "Find JPEG picture decoder failed, picture path"<< fileName;
 	}
-	// 设置pCodecCtx的解码器为pCodec
+	// Set the decoder of pCodecCtx to pCodec
 	if (avcodec_open2(pCodecCtx, pCodec, NULL) < 0) {
-		LOG(INFO) << "打开JPEG图片解码器失败，图片路径" << fileName;
+		LOG(INFO) << "Open JPEG picture decoder failed, picture path" << fileName;
 	}
 
 	//Write Header
@@ -333,7 +355,7 @@ void ffmpeg_to_web::writeJPEG(AVFrame * pFrame, int width, int height)
 	int y_size = pCodecCtx->width * pCodecCtx->height;
 
 	//Encode
-	// 给AVPacket分配足够大的空间
+	// Allocate enough space for AVPacket
 	AVPacket pkt;
 	av_new_packet(&pkt, y_size * 3);
 
@@ -341,7 +363,7 @@ void ffmpeg_to_web::writeJPEG(AVFrame * pFrame, int width, int height)
 	int got_picture = 0;
 	int ret = avcodec_encode_video2(pCodecCtx, &pkt, pFrame, &got_picture);
 	if (ret < 0) {
-		LOG(INFO) << "编码JPEG图片失败，图片路径" << fileName;
+		LOG(INFO) << "Encoding JPEG image failed, image path" << fileName;
 	}
 	if (got_picture == 1) {
 		//pkt.stream_index = pAVStream->index;
@@ -353,7 +375,7 @@ void ffmpeg_to_web::writeJPEG(AVFrame * pFrame, int width, int height)
 	//Write Trailer
 	av_write_trailer(pFormatCtx);
 
-	LOG(INFO) << "存储JPEG图片成功，图片路径" << fileName;
+	LOG(INFO) << "Store JPEG images successfully, image path" << fileName;
 
 	if (pAVStream) 
 	{
@@ -373,7 +395,7 @@ void ffmpeg_to_web::ffmpegClose()
 	avio_close(outputContext->pb);
 	avformat_free_context(context);
 	avformat_free_context(outputContext);
-	LOG(INFO) << " ffmpeg_to_web::stop 调用，主线程停止";
+	LOG(INFO) << " ffmpeg_to_web::stop Call, the main thread stops";
 }
 
 int ffmpeg_to_web::interruptReadFrame(void* ctx)

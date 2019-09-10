@@ -9,26 +9,26 @@ void HttpServer::Init()
 	s_server_option.document_root = s_web_dir.c_str();
 
 
-	// 其他http设置
-	// 开启 CORS，本项只针对主页加载有效
+	// Other http settings
+	// Open CORS, this item is only valid for home page loading.
 	// s_server_option.extra_headers = "Access-Control-Allow-Origin: *";
 }
 
 bool HttpServer::Start()
 {
-	LOG(INFO) << "HttpServer::Start 线程开始运行";
+	LOG(INFO) << "HttpServer::Start thread start ";
 
 	mg_mgr_init(&m_mgr, NULL);
 	mg_connection *connection = mg_bind(&m_mgr, m_port.c_str(), HttpServer::OnHttpWebsocketEvent);
 	if (connection == NULL)
 	{
-		LOG(INFO) << "HttpServer::Start 绑定端失败，端口号：" << m_port;
+		LOG(INFO) << "HttpServer::Start bing port fail：" << m_port;
 		return false;
 	}
 	// for both http and websocket
 	mg_set_protocol_http_websocket(connection);
 
-	LOG(INFO) << "HttpServer::Start 开始监听HTTP请求，端口号：" << m_port;
+	LOG(INFO) << "HttpServer::Start listen http request，port：" << m_port;
 
 	// loop
 	while (true)
@@ -39,7 +39,7 @@ bool HttpServer::Start()
 
 void HttpServer::OnHttpWebsocketEvent(mg_connection *connection, int event_type, void *event_data)
 {
-	// 区分http和websocket
+	// Differentiate between http and websocket
 	if (event_type == MG_EV_HTTP_REQUEST)
 	{
 		http_message *http_req = (http_message *)event_data;
@@ -62,7 +62,7 @@ static bool route_check(http_message *http_msg, char *route_prefix)
 	else
 		return false;
 
-	// TODO: 还可以判断 GET, POST, PUT, DELTE等方法
+	// TODO: Can judge GET, POST, PUT, DELTE and other methods
 	//mg_vcmp(&http_msg->method, "GET");
 	//mg_vcmp(&http_msg->method, "POST");
 	//mg_vcmp(&http_msg->method, "PUT");
@@ -86,15 +86,15 @@ void HttpServer::RemoveHandler(const std::string &url)
 
 void HttpServer::SendHttpRsp(mg_connection *connection, std::string rsp)
 {
-	// --- 未开启CORS
-	// 必须先发送header, 暂时还不能用HTTP/2.0
+	// --- CORS is not turned on
+	// The header must be sent first, and HTTP/2.0 cannot be used yet.
 	mg_printf(connection, "%s", "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n");
-	// 以json形式返回
+	// Return in json form
 	mg_printf_http_chunk(connection, "%s", rsp.c_str());
-	// 发送空白字符快，结束当前响应
+	// Send blank characters fast, end current response
 	mg_send_http_chunk(connection, "", 0);
 
-	// --- 开启CORS
+	// --- Open CORS
 	/*mg_printf(connection, "HTTP/1.1 200 OK\r\n"
 			  "Content-Type: text/plain\n"
 			  "Cache-Control: no-cache\n"
@@ -107,9 +107,9 @@ void HttpServer::HandleHttpEvent(mg_connection *connection, http_message *http_r
 {
 	std::string req_str = std::string(http_req->message.p, http_req->message.len);
 
-	LOG(INFO) << "HttpServer::HandleHttpEvent 获取到HTTP请求：" << req_str;
+	LOG(INFO) << "HttpServer::HandleHttpEvent get HTTP request：" << req_str;
 
-	// 先过滤是否已注册的函数回调
+	// First filter whether the registered function callback
 	std::string url = std::string(http_req->uri.p, http_req->uri.len);
 	std::string body = std::string(http_req->body.p, http_req->body.len);
 	auto it = s_handler_map.find(url);
@@ -120,12 +120,12 @@ void HttpServer::HandleHttpEvent(mg_connection *connection, http_message *http_r
 		return;
 	}
 
-	// 其他请求
+	// other request
 	//if (route_check(http_req, "/")) // index page
 	//	mg_serve_http(connection, http_req, s_server_option);
 	//else if (route_check(http_req, "/api/return")) 
 	//{
-	//	// 直接回传
+	//	// Direct return
 
 	//	SendHttpRsp(connection, body);
 	//}
@@ -165,15 +165,15 @@ void HttpServer::HandleWebsocketMessage(mg_connection *connection, int event_typ
 	{
 		printf("client websocket connected\n");
 
-		LOG(INFO) << "HttpServer::HandleWebsocketMessage WebSocket握手成功：";
+		LOG(INFO) << "HttpServer::HandleWebsocketMessage WebSocket handshake succeeded：";
 
-		// 获取连接客户端的IP和端口
+		// Get the IP and port of the connected client
 		char addr[32];
 		mg_sock_addr_to_str(&connection->sa, addr, sizeof(addr), MG_SOCK_STRINGIFY_IP | MG_SOCK_STRINGIFY_PORT);
 
-		LOG(INFO) << "HttpServer::HandleWebsocketMessage WebSocket地址："<<addr;
+		LOG(INFO) << "HttpServer::HandleWebsocketMessage WebSocket address："<<addr;
 
-		// 添加 session
+		// add session
 		s_websocket_session_set.insert(connection);
 
 		SendWebsocketMsg(connection, "client websocket connected");
@@ -190,7 +190,7 @@ void HttpServer::HandleWebsocketMessage(mg_connection *connection, int event_typ
 		strncpy(buff, received_msg.p, received_msg.len); // must use strncpy, specifiy memory pointer and length
 
 		// do sth to process request
-		LOG(INFO) << "HttpServer::HandleWebsocketMessage 收到信息：" << buff;
+		LOG(INFO) << "HttpServer::HandleWebsocketMessage get message：" << buff;
 
 		SendWebsocketMsg(connection, "send your msg back: " + std::string(buff));
 		//BroadcastWebsocketMsg("broadcast msg: " + std::string(buff));
@@ -199,7 +199,7 @@ void HttpServer::HandleWebsocketMessage(mg_connection *connection, int event_typ
 	{
 		if (isWebsocket(connection))
 		{
-			LOG(INFO) << "HttpServer::HandleWebsocketMessage 关闭WebSocket：";
+			LOG(INFO) << "HttpServer::HandleWebsocketMessage close WebSocket：";
 			// 移除session
 			if (s_websocket_session_set.find(connection) != s_websocket_session_set.end())
 				s_websocket_session_set.erase(connection);

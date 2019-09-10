@@ -17,33 +17,35 @@ class rtp_socket;
 struct camera_info
 {
 	std::string strCamId;
-	int iRecvPort;								//对应媒体接收端端口
+	int iRecvPort;								//media receive port
 	int status;
 	int statusErrCnt;
 	int running;
-	int call_id;	//连接ID
-	int dialog_id;	//会话ID
+	int call_id;	
+	int dialog_id;	
 	rtp_socket *m_rtpSocket;
 	ffmpeg_to_web *m_ffmpeg;
 };
 
 struct video_server
 {
-	std::string m_strRealm;	//域
+	std::string m_strRealm;	//real
 	std::string m_strID;	//ID
 	std::string m_strIP;	//IP
-	std::string m_strPassword;	//密码
-	std::string xmlCatalog;		//目录缓存
+	std::string m_strPassword;	
+	std::string xmlCatalog;		//video catalog
 
-	int m_iPort;	//端口
-	int m_iExpires;	//注册时间
-	int m_iHeartBeat;	//心跳周期
-	int m_iKeepAliveInterval;	//保活间隔
+	int m_iPort;
+	int m_iExpires;
+	int m_iHeartBeat;
+	int m_iKeepAliveInterval;
 
-	bool m_bKeepAlive;			//保活
-	bool m_bReceiveRTCP;	//接收RTCP
-	int isRegister;	//判断是否是注册请求
-	int m_SN;		//信令计数器，没法送一次控制类型信令自增1
+	bool m_bKeepAlive;
+	bool m_bReceiveRTCP;
+	int isRegister;
+	int m_SN;
+	int call_id;
+	int dialog_id;
 };
 
 class local_server
@@ -53,7 +55,6 @@ public:
 	~local_server();
 
 	bool m_bIsStop;          //是否收到停止命令
-	bool m_bIsThreadRunning; //现在是否在运行
 
 	std::list<camera_info> m_cameraList;	//正在播放的相机列表
 	std::list<video_server> m_platformList;		//下级域服务器列表

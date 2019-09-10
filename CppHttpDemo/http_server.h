@@ -16,43 +16,43 @@ public:
 
 	~HttpServer() {}
 
-	void Init(); // 初始化设置
+	void Init(); // Initialization settings
 
-	bool Start(); // 启动httpserver
+	bool Start(); // start http server
 
-	bool Close(); // 关闭
+	bool Close(); // close http server
 
-	void AddHandler(const std::string &url, ReqHandler req_handler); // 注册事件处理函数
+	void AddHandler(const std::string &url, ReqHandler req_handler); // Register event handler
 
-	void RemoveHandler(const std::string &url); // 移除时间处理函数
+	void RemoveHandler(const std::string &url); // Remove time handler
 
-	static std::string s_web_dir; // 网页根目录 
+	static std::string s_web_dir; // Web root directory 
 
-	static mg_serve_http_opts s_server_option; // web服务器选项
+	static mg_serve_http_opts s_server_option; // Web server option
 
-	static std::unordered_map<std::string, ReqHandler> s_handler_map; // 回调函数映射表
+	static std::unordered_map<std::string, ReqHandler> s_handler_map; // Callback function mapping table
 
-	std::string m_port;    // 端口
+	std::string m_port;    // port
 
-	std::string m_ip;		//地址
+	std::string m_ip;		//ip
 private:
-	// 静态事件响应函数
+	// Static event response function
 	static void OnHttpWebsocketEvent(mg_connection *connection, int event_type, void *event_data);
 
 	static void HandleHttpEvent(mg_connection *connection, http_message *http_req);
 
 	static void SendHttpRsp(mg_connection *connection, std::string rsp);
 
-	static int isWebsocket(const mg_connection *connection); // 判断是否是websoket类型连接
+	static int isWebsocket(const mg_connection *connection); // Determine if it is a websoket type connection
 
-	static void HandleWebsocketMessage(mg_connection *connection, int event_type, websocket_message *ws_msg); //响应websocket的消息
+	static void HandleWebsocketMessage(mg_connection *connection, int event_type, websocket_message *ws_msg); //Respond to websocket messages
 
-	static void SendWebsocketMsg(mg_connection *connection, std::string msg); // 发送消息到指定连接
+	static void SendWebsocketMsg(mg_connection *connection, std::string msg); // Send a message to the specified connection
 
-	static void BroadcastWebsocketMsg(std::string msg); // 给所有连接广播消息
+	static void BroadcastWebsocketMsg(std::string msg); // Broadcast messages to all connections
 
-	static std::unordered_set<mg_connection *> s_websocket_session_set; // 缓存websocket连接
+	static std::unordered_set<mg_connection *> s_websocket_session_set; // Cache websocket connection
 
-	mg_mgr m_mgr;          // 连接管理器
+	mg_mgr m_mgr;          // Connection manager
 };
 
