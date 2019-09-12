@@ -13,6 +13,7 @@ class rtp_socket;
 #define SUB_RIGHT 3
 #define SUB_ZOOMIN 4
 #define SUB_ZOOMOUT 5
+#define SUB_STOP 6
 
 struct camera_info
 {
@@ -79,7 +80,7 @@ public:
 	int sendInvite(const char* cameraId, const char* platformIP, int platformPort, int cameraPort);
 	int sendBye(int callId, int dialogId);
 	int sendQueryCatalog(const char* platformID, int sn, const char* platformIP, int platformPort);
-	int sendPTZCMD(const char* deviceID, const int sn, const char* ptzCode, const char* platformID, const char* platformIP, int platformPort);
+	int sendPTZCMD(const char* deviceID, const int sn, const int ptzDirection, const char* platformID, const char* platformIP, int platformPort);
 	int sendPlayBack(const char* cameraId, const char* platformIP, int platformPort, int cameraPort, time_t startTime, time_t endTime);
 	std::string getPTZCode(const int m_iSubCMD);
 };

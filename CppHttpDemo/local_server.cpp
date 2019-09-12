@@ -297,9 +297,10 @@ int local_server::sendQueryCatalog(const char* platformID, int sn, const char* p
 	return iRet;
 }
 
-int local_server::sendPTZCMD(const char* deviceID, const int sn, const char* ptzCode, const char* platformID, const char* platformIP, int platformPort)
+int local_server::sendPTZCMD(const char* deviceID, const int sn, const int ptzDirection, const char* platformID, const char* platformIP, int platformPort)
 {
-	std::string bufPTZ = xmlConfig::builPTZControlXml(deviceID, sn, ptzCode);
+	std::string ptzCode = getPTZCode(ptzDirection);
+	std::string bufPTZ = xmlConfig::builPTZControlXml(deviceID, sn, ptzCode.c_str());
 
 	LOG(INFO) << "local_server::sendPTZCMD£¬device ID£º" << deviceID;
 
