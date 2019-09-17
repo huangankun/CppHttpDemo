@@ -32,8 +32,6 @@ void ffmpeg_to_web::stop()
 
 void ffmpeg_to_web::ffmpegInit()
 {
-	LOG(INFO) << " ffmpeg_to_web::ffmpegInit initialization ";
-
 	av_register_all();
 	avfilter_register_all();
 	avformat_network_init();
@@ -135,24 +133,28 @@ int ffmpeg_to_web::openOutputStream()
 
 	LOG(INFO) << " ffmpeg_to_web::openOutputStream avio_open2 initialization succeeded£¬avcodec_copy_context Start decoder replication...";
 
-	for (int i = 0; i < context->nb_streams; i++)
+	if (context != nullptr)
 	{
-		if (context->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO)
+		for (int i = 0; i < context->nb_streams; i++)
 		{
-			videoStream = i;
-		}
-		AVStream* stream = avformat_new_stream(outputContext, nullptr);
-		ret = avcodec_copy_context(stream->codec, context->streams[i]->codec);
-		if (ret < 0)
-		{
-			char errStr[256];
-			av_strerror(ret, errStr, 256);
+			if (context->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO)
+			{
+				videoStream = i;
+			}
+			AVStream* stream = avformat_new_stream(outputContext, nullptr);
+			ret = avcodec_copy_context(stream->codec, context->streams[i]->codec);
+			if (ret < 0)
+			{
+				char errStr[256];
+				av_strerror(ret, errStr, 256);
 
-			LOG(INFO) << " ffmpeg_to_web::openOutputStream avcodec_copy_context decoder replication failed£¬ return code£º" << errStr;
+				LOG(INFO) << " ffmpeg_to_web::openOutputStream avcodec_copy_context decoder replication failed£¬ return code£º" << errStr;
 
-			return ret;
+				return ret;
+			}
 		}
 	}
+
 
 	LOG(INFO) << " ffmpeg_to_web::openOutputStream£¬Decoder copy completed£¬avformat_write_header, Start writing the output header...";
 

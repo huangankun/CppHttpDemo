@@ -34,6 +34,7 @@ bool HttpServer::Start()
 	while (true)
 		mg_mgr_poll(&m_mgr, 500); // ms
 
+	LOG(INFO) << "http_server stop";
 	return true;
 }
 
@@ -220,6 +221,7 @@ void HttpServer::BroadcastWebsocketMsg(std::string msg)
 
 bool HttpServer::Close()
 {
+	LOG(INFO) << "http_server exit()";
 	mg_mgr_free(&m_mgr);
 	return true;
 }

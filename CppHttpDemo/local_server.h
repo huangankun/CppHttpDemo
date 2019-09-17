@@ -24,7 +24,9 @@ struct camera_info
 	int running;
 	int call_id;	
 	int dialog_id;	
+	//rtp_socket *m_rtpSocket;
 	rtp_socket *m_rtpSocket;
+	//ffmpeg_to_web *m_ffmpeg;
 	ffmpeg_to_web *m_ffmpeg;
 };
 

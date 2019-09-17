@@ -59,21 +59,21 @@ void rtp_socket::stop(bool isWait)
 		{
 			shutdown(m_pCallInfo->CSocket, SD_BOTH);
 			closesocket(m_pCallInfo->CSocket);
-			WSACleanup();
+			//WSACleanup();
 			//LOG(INFO) << "rtcp接收socket已经关闭";
 		}
 		if (m_pCallInfo->RSocket != INVALID_SOCKET)
 		{
 			shutdown(m_pCallInfo->RSocket, SD_BOTH);
 			closesocket(m_pCallInfo->RSocket);
-			WSACleanup();
+			//WSACleanup();
 		//	LOG(INFO) << "rtp接收socket已经关闭";
 		}
 		if (m_pCallInfo->USocket != INVALID_SOCKET)
 		{
-			//shutdown(m_pCallInfo->USocket, SD_BOTH);
+			shutdown(m_pCallInfo->USocket, SD_BOTH);
 			closesocket(m_pCallInfo->USocket);
-			WSACleanup();
+			//WSACleanup();
 			//LOG(INFO) << "udp转发socket已经关闭";
 		}
 		//m_pCallInfo->m_bExitThread = FALSE;
