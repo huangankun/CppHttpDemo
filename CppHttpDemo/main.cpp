@@ -276,7 +276,6 @@ bool handle_get_catalog(std::string url, std::string body, mg_connection *c, OnR
 	return true;
 }
 
-
 int main(int argc, char *argv[])
 {
 	LOG(INFO) << "***** Program startup *****";

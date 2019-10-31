@@ -35,7 +35,7 @@ void ffmpeg_to_web::ffmpegInit()
 	av_register_all();
 	avfilter_register_all();
 	avformat_network_init();
-	av_log_set_level(AV_LOG_ERROR);
+	av_log_set_level(AV_LOG_QUIET);
 }
 
 int ffmpeg_to_web::openInputStream()
